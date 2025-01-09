@@ -10,11 +10,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type User struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
 func main() {
 	// Initialize NATS connection and KV store
 	natsURL := os.Getenv("NATS_URL")
