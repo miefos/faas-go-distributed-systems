@@ -19,6 +19,7 @@ func RegisterRoutes(router *mux.Router, kvStore *storage.KVStore) {
 
 	router.HandleFunc("/register", h.RegisterFunction).Methods("POST")
 	router.HandleFunc("/retrieve/{id}", h.RetrieveFunction).Methods("GET")
+	router.HandleFunc("/list", h.ListFunctions).Methods("GET") // New route to list all functions
 }
 
 func (h *Handler) RegisterFunction(w http.ResponseWriter, r *http.Request) {
@@ -59,4 +60,16 @@ func (h *Handler) RetrieveFunction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(metadata)
+}
+
+func (h *Handler) ListFunctions(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("UserID")
+
+	metadataList, err := h.KVStore.ListFunctions(userID)
+	if err != nil {
+		http.Error(w, "Failed to retrieve functions", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(metadataList)
 }

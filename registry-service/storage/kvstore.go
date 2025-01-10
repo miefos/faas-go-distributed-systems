@@ -3,6 +3,7 @@ package storage
 import (
 	"log"
 	"encoding/json"
+	"strings"
 	"fmt"
 
 	"github.com/nats-io/nats.go"
@@ -71,3 +72,37 @@ func (kv *KVStore) GetFunctionMetadata(userID, functionID string) (*models.Funct
 	}
 	return &metadata, nil
 }
+
+func (kv *KVStore) ListFunctions(userID string) ([]models.FunctionMetadata, error) {
+    // Retrieve all keys in the bucket
+    keys, err := kv.bucket.Keys()
+    if err != nil {
+        return nil, fmt.Errorf("failed to retrieve keys from the bucket: %w", err)
+    }
+
+    var metadataList []models.FunctionMetadata
+    prefix := fmt.Sprintf("user_%s/", userID)
+
+    // Iterate over keys and filter based on the prefix
+    for _, key := range keys {
+        if !strings.HasPrefix(key, prefix) {
+            continue
+        }
+
+        // Fetch the entry for the key
+        entry, err := kv.bucket.Get(key)
+        if err != nil {
+            return nil, fmt.Errorf("failed to retrieve metadata for key %s: %w", key, err)
+        }
+
+        var metadata models.FunctionMetadata
+        if err := json.Unmarshal(entry.Value(), &metadata); err != nil {
+            return nil, fmt.Errorf("failed to deserialize metadata for key %s: %w", key, err)
+        }
+
+        metadataList = append(metadataList, metadata)
+    }
+
+    return metadataList, nil
+}
+
