@@ -19,7 +19,8 @@ func RegisterRoutes(router *mux.Router, kvStore *storage.KVStore) {
 
 	router.HandleFunc("/register", h.RegisterFunction).Methods("POST")
 	router.HandleFunc("/retrieve/{id}", h.RetrieveFunction).Methods("GET")
-	router.HandleFunc("/list", h.ListFunctions).Methods("GET") // New route to list all functions
+	router.HandleFunc("/list", h.ListFunctions).Methods("GET")
+	router.HandleFunc("/delete/{id}", h.DeleteFunction).Methods("DELETE")
 }
 
 func (h *Handler) RegisterFunction(w http.ResponseWriter, r *http.Request) {
@@ -72,4 +73,17 @@ func (h *Handler) ListFunctions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(metadataList)
+}
+
+func (h *Handler) DeleteFunction(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	functionID := vars["id"]
+	userID := r.Header.Get("UserID")
+
+	if err := h.KVStore.DeleteFunctionMetadata(userID, functionID); err != nil {
+		http.Error(w, "Failed to delete function metadata", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

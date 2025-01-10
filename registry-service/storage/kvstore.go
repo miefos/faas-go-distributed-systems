@@ -106,3 +106,10 @@ func (kv *KVStore) ListFunctions(userID string) ([]models.FunctionMetadata, erro
     return metadataList, nil
 }
 
+func (kv *KVStore) DeleteFunctionMetadata(userID, functionID string) error {
+	key := fmt.Sprintf("user_%s/%s", userID, functionID)
+	if err := kv.bucket.Delete(key); err != nil {
+		return fmt.Errorf("failed to delete metadata: %w", err)
+	}
+	return nil
+}
