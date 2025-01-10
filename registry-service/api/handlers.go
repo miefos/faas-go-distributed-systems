@@ -21,6 +21,7 @@ func RegisterRoutes(router *mux.Router, kvStore *storage.KVStore) {
 	router.HandleFunc("/retrieve/{id}", h.RetrieveFunction).Methods("GET")
 	router.HandleFunc("/list", h.ListFunctions).Methods("GET")
 	router.HandleFunc("/delete/{id}", h.DeleteFunction).Methods("DELETE")
+	router.HandleFunc("/update/{id}", h.UpdateFunction).Methods("PUT")
 }
 
 func (h *Handler) RegisterFunction(w http.ResponseWriter, r *http.Request) {
@@ -31,6 +32,10 @@ func (h *Handler) RegisterFunction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := r.Header.Get("UserID") // Example user authentication
+	if userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	metadata.UserID = userID
 
 	// Check if the function with the same ID and user ID already exists
@@ -54,6 +59,11 @@ func (h *Handler) RetrieveFunction(w http.ResponseWriter, r *http.Request) {
 	functionID := vars["id"]
 	userID := r.Header.Get("UserID")
 
+	if userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	metadata, err := h.KVStore.GetFunctionMetadata(userID, functionID)
 	if err != nil {
 		http.Error(w, "Function not found", http.StatusNotFound)
@@ -65,6 +75,11 @@ func (h *Handler) RetrieveFunction(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) ListFunctions(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("UserID")
+
+	if userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	metadataList, err := h.KVStore.ListFunctions(userID)
 	if err != nil {
@@ -80,10 +95,48 @@ func (h *Handler) DeleteFunction(w http.ResponseWriter, r *http.Request) {
 	functionID := vars["id"]
 	userID := r.Header.Get("UserID")
 
+	if userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	if err := h.KVStore.DeleteFunctionMetadata(userID, functionID); err != nil {
 		http.Error(w, "Failed to delete function metadata", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) UpdateFunction(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	functionID := vars["id"]
+	userID := r.Header.Get("UserID")
+
+	if userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var metadata models.FunctionMetadata
+	if err := json.NewDecoder(r.Body).Decode(&metadata); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	metadata.ID = functionID
+	metadata.UserID = userID
+
+	// Delete old metadata before updating
+	if err := h.KVStore.DeleteFunctionMetadata(userID, functionID); err != nil {
+		http.Error(w, "Failed to update function metadata", http.StatusInternalServerError)
+		return
+	}
+
+	if err := h.KVStore.StoreFunctionMetadata(userID, &metadata); err != nil {
+		http.Error(w, "Failed to update function metadata", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(metadata)
 }

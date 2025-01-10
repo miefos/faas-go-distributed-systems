@@ -8,7 +8,9 @@ The following environment variables are required to run the service:
 - `BUCKET_NAME`: The name of the bucket in which the functions will be stored.
 
 ## REST API
-The REST API to the registry service is described below. Note that all calls should contain a `UserId` header with the user's ID.
+The REST API to the registry service is described below. 
+
+**Note that all calls should contain a `UserId` header with the user's ID.**
 
 | Endpoint       | Method | Description                                   |
 |----------------|--------|-----------------------------------------------|
@@ -22,6 +24,15 @@ Here's an example of the body of the request to register a new function:
 ```json
 {
     "id":"func1",
+    "name":"MyFunction",
+    "description":"Test function",
+    "payload":"print(42)"
+}
+```
+
+Here's an example of the body of the request to update a function:
+```json
+{
     "name":"MyFunction",
     "description":"Test function",
     "payload":"print(42)"
