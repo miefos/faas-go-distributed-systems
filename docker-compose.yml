@@ -10,6 +10,19 @@ services:
     environment:
       - NATS_URL=nats://nats:4222
 
+  registry-service:
+    build:
+      context: ./registry-service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    depends_on:
+      - nats
+    environment:
+      - NATS_URL=nats://nats:4222
+      - SERVER_ADDRESS=:8081
+      - BUCKET_NAME=functions
+
   nats:
     image: nats:latest
     ports:
