@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"log"
 
 	"registry-service/models"
 	"registry-service/storage"
@@ -50,6 +51,7 @@ func (h *Handler) RegisterFunction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("Function %s registered by user %s", metadata.ID, metadata.UserID)
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(metadata)
 }
@@ -70,6 +72,7 @@ func (h *Handler) RetrieveFunction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("Function %s retrieved by user %s", metadata.ID, metadata.UserID)
 	json.NewEncoder(w).Encode(metadata)
 }
 
@@ -87,6 +90,7 @@ func (h *Handler) ListFunctions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("Functions listed for user %s", userID)
 	json.NewEncoder(w).Encode(metadataList)
 }
 
@@ -105,6 +109,7 @@ func (h *Handler) DeleteFunction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("Function %s deleted by user %s", functionID, userID)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -137,6 +142,7 @@ func (h *Handler) UpdateFunction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("Function %s updated by user %s", metadata.ID, metadata.UserID)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(metadata)
 }
