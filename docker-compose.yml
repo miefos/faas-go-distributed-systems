@@ -1,35 +1,60 @@
+version: '1.0'
 services:
   auth-service:
     build:
       context: ./auth-service
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "8080" # This is done so that when scaling the service, docker will perform the reroouting automatically
     depends_on:
       - nats
     environment:
       - NATS_URL=nats://nats:4222
+    networks:
+      - default
 
   registry-service:
     build:
       context: ./registry-service
       dockerfile: Dockerfile
     ports:
-      - "8081:8081"
+      - "8081" # This is done so that when scaling the service, docker will perform the reroouting automatically
     depends_on:
       - nats
     environment:
       - NATS_URL=nats://nats:4222
       - SERVER_ADDRESS=:8081
       - BUCKET_NAME=functions
+    networks:
+      - default
 
   nats:
     image: nats:latest
     ports:
-      - "4222:4222"
+      - "4222"
       - "8222:8222"
     command:
       - "--jetstream"
       - "--store_dir=/data/jetstream"  # Directory for JetStream data
     volumes:
       - ./nats-data:/data  # Persistent storage for JetStream
+    networks:
+      - default
+
+  # This is the nginx service that will act as the API Gateway, it will probably not be needed when we will deploy the actual API Gateway with its reverse proxy
+  # The internal load balancing will be done by docker itself and the external load balancing will be done by the APISIX Reverse Proxy
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - auth-service
+      - registry-service
+    ports:
+      - "4000:4000" # Port mapped to the auth-service
+      - "5000:5000" # Port mapped to the registry service
+
+networks:
+  default:
+    driver: bridge
+    name: app-network
