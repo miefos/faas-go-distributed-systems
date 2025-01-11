@@ -14,6 +14,8 @@ docker compose up --scale auth-service=<number> --scale registry-service=<number
 ```
 
 ## Modules
+- The auth service is available INTERNALLY at http://auth-service:8080, EXTERNALLY at http://x.x.x.x:4000.
+- The registry service is available INTERNALLY at http://registry-service:8081, EXTERNALLY at http://x.x.x.x:5000.
 
 ### APISIX
 I have no freaking clue of what this does or how it works, we'll explore it.
@@ -40,7 +42,6 @@ Registering & unregistering functions
 - [x] Update function by id
 
 Details can be found here: [Registry service](registry-service/README.md)
-
 
 ### Execution service
 Executing functions
