@@ -1,15 +1,28 @@
 package utils
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 )
 
-var jwtKey = []byte("your_secret_key")
+var jwtKey []byte
 
-func GenerateJWT(username string) (string, error) {
+func init() {
+	// Read the JWT secret key from the secret.txt file
+	key, err := os.ReadFile("tmp/secret.txt")
+	if err != nil {
+		fmt.Println("Error reading the secret file:", err)
+		os.Exit(1)
+	}
+	jwtKey = key
+}
+
+func GenerateJWT(id string, username string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":       id,
 		"username": username,
 		"exp":      time.Now().Add(time.Hour * 72).Unix(),
 	})

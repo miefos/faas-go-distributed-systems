@@ -20,5 +20,8 @@ func ValidateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte("Token is valid. Claims: " + claims["username"].(string)))
+	_, err = w.Write([]byte("Token is valid. Username: " + claims["username"].(string) + ", ID: " + claims["id"].(string)))
+	if err != nil {
+		return
+	}
 }

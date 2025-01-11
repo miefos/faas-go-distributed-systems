@@ -15,7 +15,7 @@ docker compose up --scale auth-service=<number> --scale registry-service=<number
 
 ## Modules
 
-## APISIX
+### APISIX
 I have no freaking clue of what this does or how it works, we'll explore it.
 
 ### API Gateway
@@ -28,9 +28,6 @@ The entrypoint to all the services, this is the only service that is exposed to 
 
 ### Auth service
 User auth & registration
-- [x] User registration
-- [ ] Add user id to user model
-- [ ] Login
 
 Details can be found here: [Auth service](auth-service/README.md)
 
@@ -47,3 +44,12 @@ Details can be found here: [Registry service](registry-service/README.md)
 
 ### Execution service
 Executing functions
+
+### NATS
+#### Monitoring at localhost:8222
+![alt text](images/nats-monitoring.png)
+
+# Limitations
+Since function activations are synchronous, it has certain limitations
+* If message queue is long, then the HTTP request may timeout.
+* If a function has a long execution, then the HTTP request may timeout and would affect other users as well. 
