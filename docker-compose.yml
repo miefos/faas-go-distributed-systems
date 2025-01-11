@@ -31,5 +31,6 @@ services:
     command:
       - "--jetstream"
       - "--store_dir=/data/jetstream"  # Directory for JetStream data
+      - "--http_port=8222"  # Enable monitoring on port 8222
     volumes:
       - ./nats-data:/data  # Persistent storage for JetStream

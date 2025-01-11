@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 // RegisterHandler handles user registration
@@ -30,6 +32,9 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Generate a UUID for the user
+	user.ID = uuid.NewString()
+
 	// Hash the password
 	hashedPassword, err := utils.HashPassword(user.Password)
 	if err != nil {
@@ -37,15 +42,29 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Store the hashed password in the NATS KV store
-	result, err := utils.KvStore.Put(user.Username, []byte(hashedPassword))
+	// Store the user data in the NATS KV store (with hashed password and ID)
+	userData := models.UserValue{
+		ID:       user.ID,
+		Password: hashedPassword,
+	}
+
+	userDataJSON, err := json.Marshal(userData)
+	if err != nil {
+		http.Error(w, "Error marshaling user data", http.StatusInternalServerError)
+		return
+	}
+
+	result, err := utils.KvStore.Put(user.Username, userDataJSON)
 	if err != nil {
 		http.Error(w, "Error storing user data", http.StatusInternalServerError)
 		return
 	}
 
 	// Send a success response
-	log.Printf("User %s registered successfully", user.Username)
+	log.Printf("User %s registered successfully with ID %s", user.Username, user.ID)
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(fmt.Sprintf("User %s (%+v) registered successfully", user.Username, result)))
+	_, err = w.Write([]byte(fmt.Sprintf("User %s (ID: %s) registered successfully: %+v", user.Username, user.ID, result)))
+	if err != nil {
+		return
+	}
 }
