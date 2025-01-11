@@ -10,7 +10,7 @@ docker compose up
 
 To scale services, simply add the `--scale` flag to the command:
 ```bash
-docker compose up --scale auth-service=<number> --scale registry-service=<number> --scale execution-service=<number>
+docker compose up --scale auth-service=<number> registry-service=<number> execution-service=<number>
 ```
 
 ## Modules
