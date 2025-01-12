@@ -22,7 +22,7 @@ func RegisterRoutes(router *mux.Router, kvStore *storage.KVStore) {
 	router.HandleFunc("/retrieve", h.RetrieveFunction).Methods("GET")
 	router.HandleFunc("/list", h.ListFunctions).Methods("GET")
 	router.HandleFunc("/delete", h.DeleteFunction).Methods("DELETE")
-	router.HandleFunc("/update", h.UpdateFunction).Methods("PUT")
+	// router.HandleFunc("/update", h.UpdateFunction).Methods("PUT")
 }
 
 func (h *Handler) RegisterFunction(w http.ResponseWriter, r *http.Request) {
