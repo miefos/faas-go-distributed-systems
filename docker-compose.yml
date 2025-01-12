@@ -10,8 +10,24 @@ services:
       - nats
     environment:
       - NATS_URL=nats://nats:4222
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8222"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   registry-service:
     build:
@@ -25,15 +41,31 @@ services:
       - NATS_URL=nats://nats:4222
       - SERVER_ADDRESS=:8081
       - BUCKET_NAME=functions
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8222"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-  worker-spawner:
+  spawner-service:
     build:
-      context: ./worker-spawner
+      context: ./spawner-service
       dockerfile: Dockerfile
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # Accesso al Docker daemon
+      - /var/run/docker.sock:/var/run/docker.sock # Access to the Docker daemon
     expose:
       - "8082"
     depends_on:
@@ -41,15 +73,20 @@ services:
     environment:
       - NATS_URL=nats://nats:4222
       - MAX_CONTAINERS=5
-      - FUNCTION_IMAGE=sventur/my_python_image:latest
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8222"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   nats:
     image: nats:latest
     expose:
       - "4222"  # Expose NATS for external and internal communication
     ports:
+      - "4222:4222"  # External port mapped to NATS
       - "8222:8222"  # Enable monitoring on port 8222
     command:
       - "--jetstream"
