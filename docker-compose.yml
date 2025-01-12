@@ -28,6 +28,23 @@ services:
     networks:
       - app-network
 
+  worker-spawner:
+    build:
+      context: ./worker-spawner
+      dockerfile: Dockerfile
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # Accesso al Docker daemon
+    expose:
+      - "8082"
+    depends_on:
+      - nats
+    environment:
+      - NATS_URL=nats://nats:4222
+      - MAX_CONTAINERS=5
+      - FUNCTION_IMAGE=sventur/my_python_image:latest
+    networks:
+      - app-network
+
   nats:
     image: nats:latest
     expose:
