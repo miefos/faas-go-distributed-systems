@@ -45,12 +45,12 @@ func NewKVStore(natsUrl, bucketName string) (*KVStore, error) {
 	return &KVStore{bucket: bucket}, nil
 }
 
-func (kv *KVStore) StoreFunctionMetadata(userID string, metadata *models.FunctionMetadata) error {
+func (kv *KVStore) StoreFunctionMetadata(UUID string, metadata *models.FunctionMetadata) error {
 	data, err := json.Marshal(metadata)
 	if err != nil {
 		return fmt.Errorf("failed to serialize metadata: %w", err)
 	}
-	key := fmt.Sprintf("user_%s/%s", userID, metadata.ID)
+	key := fmt.Sprintf("user_%s/%s", metadata.UUID, metadata.Name)
 
 	_, err = kv.bucket.Put(key, data)
 	if err != nil {
@@ -59,8 +59,8 @@ func (kv *KVStore) StoreFunctionMetadata(userID string, metadata *models.Functio
 	return nil
 }
 
-func (kv *KVStore) GetFunctionMetadata(userID, functionID string) (*models.FunctionMetadata, error) {
-	key := fmt.Sprintf("user_%s/%s", userID, functionID)
+func (kv *KVStore) GetFunctionMetadata(UUID, functionName string) (*models.FunctionMetadata, error) {
+	key := fmt.Sprintf("user_%s/%s", UUID, functionName)
 	entry, err := kv.bucket.Get(key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve metadata: %w", err)
@@ -73,7 +73,7 @@ func (kv *KVStore) GetFunctionMetadata(userID, functionID string) (*models.Funct
 	return &metadata, nil
 }
 
-func (kv *KVStore) ListFunctions(userID string) ([]models.FunctionMetadata, error) {
+func (kv *KVStore) ListFunctions(UUID string) ([]models.FunctionMetadata, error) {
     // Retrieve all keys in the bucket
     keys, err := kv.bucket.Keys()
     if err != nil {
@@ -81,7 +81,7 @@ func (kv *KVStore) ListFunctions(userID string) ([]models.FunctionMetadata, erro
     }
 
     var metadataList []models.FunctionMetadata
-    prefix := fmt.Sprintf("user_%s/", userID)
+    prefix := fmt.Sprintf("user_%s/", UUID)
 
     // Iterate over keys and filter based on the prefix
     for _, key := range keys {
@@ -106,8 +106,8 @@ func (kv *KVStore) ListFunctions(userID string) ([]models.FunctionMetadata, erro
     return metadataList, nil
 }
 
-func (kv *KVStore) DeleteFunctionMetadata(userID, functionID string) error {
-	key := fmt.Sprintf("user_%s/%s", userID, functionID)
+func (kv *KVStore) DeleteFunctionMetadata(UUID, functionName string) error {
+	key := fmt.Sprintf("user_%s/%s", UUID, functionName)
 	if err := kv.bucket.Delete(key); err != nil {
 		return fmt.Errorf("failed to delete metadata: %w", err)
 	}

@@ -4,12 +4,14 @@ import (
 	"log"
 	"net/http"
 
-	"registry-service/api"
+	"registry-service/handlers"
 	"registry-service/config"
 	"registry-service/storage"
 
 	"github.com/gorilla/mux"
 )
+
+// TODO: Change to use the random UUID as a body parameter
 
 func main() {
 	// Load configuration
@@ -25,7 +27,7 @@ func main() {
 
 	// Set up HTTP router
 	router := mux.NewRouter()
-	api.RegisterRoutes(router, kvStore)
+	handlers.RegisterRoutes(router, kvStore)
 
 	// Start HTTP server
 	log.Printf("Starting Registry Service on %s...", cfg.ServerAddress)
