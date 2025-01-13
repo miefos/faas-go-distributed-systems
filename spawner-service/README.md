@@ -7,8 +7,8 @@ Pay attention on the libraries used:
 - "github.com/docker/docker/client"
 - "github.com/docker/docker/api/types/image"
 - "github.com/docker/docker/api/types/container"
-Those libraries change often (definition of the functions and types). If you want to modify this code, check the official documentation :) at link:
-[Documentation](https://pkg.go.dev/github.com/docker/docker/client)
+Those libraries change often (definition of the functions and types). If you want to modify this code, check the official documentation at link:
+[Documentation](https://pkg.go.dev/github.com/docker/docker/client)  :)
 
 ---
 
