@@ -22,12 +22,7 @@ services:
       restart_policy:
         condition: on-failure
     networks:
-      - app-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8222"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      - faas-app-network
 
   registry-service:
     build:
@@ -53,33 +48,7 @@ services:
       restart_policy:
         condition: on-failure
     networks:
-      - app-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8222"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  spawner-service:
-    build:
-      context: ./spawner-service
-      dockerfile: Dockerfile
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # Access to the Docker daemon
-    expose:
-      - "8082"
-    depends_on:
-      - nats
-    environment:
-      - NATS_URL=nats://nats:4222
-      - MAX_CONTAINERS=5
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8222"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      - faas-app-network
 
   nats:
     image: nats:latest
@@ -95,7 +64,7 @@ services:
     volumes:
       - ./nats-data:/data  # Persistent storage for JetStream
     networks:
-      - app-network
+      - faas-app-network
 
   nginx:
     image: nginx:latest
@@ -108,8 +77,52 @@ services:
       - "4000:4000"  # External port mapped to auth-service
       - "5000:5000"  # External port mapped to registry-service
     networks:
-      - app-network
+      - faas-app-network
+
+  # For APISIX and Dashboard
+  etcd:
+    image: bitnami/etcd
+    environment:
+      ALLOW_NONE_AUTHENTICATION: "yes"
+      ETCD_ADVERTISE_CLIENT_URLS: "http://etcd:2379"
+    ports:
+      - "2379:2379"
+    volumes:
+      - etcd_data:/bitnami/etcd
+    networks:
+      - faas-app-network
+
+  apisix:
+    image: apache/apisix
+    depends_on:
+      - etcd
+    ports:
+      - "9080:9080"  # HTTP port
+      - "9443:9443"  # HTTPS port
+      - "9180:9180"  # Admin API port
+    volumes:
+      - ./api-gateway/apisix_conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+    environment:
+      APISIX_ADMIN_KEY: "edd1c9f034335f136f87ad84b625c8f1"
+    networks:
+      - faas-app-network
+
+  dashboard:
+    image: apache/apisix-dashboard
+    ports:
+      - "9000:9000"
+    depends_on:
+      - apisix
+    environment:
+      APISIX_DASHBOARD_SSL_ENABLED: "false"
+    volumes:
+      - ./api-gateway/apisix_conf/dashboard_config.yaml:/usr/local/apisix-dashboard/conf/conf.yaml:ro
+    networks:
+      - faas-app-network
+
+volumes:
+  etcd_data:
 
 networks:
-  app-network:
+  faas-app-network:
     driver: bridge

@@ -1,0 +1,22 @@
+conf:
+  listen:
+    host: 0.0.0.0
+    port: 9000
+  etcd:
+    endpoints:
+      - "http://etcd:2379"
+  authentication:
+    secret: "secret"            # Change this in production
+    expire_time: 3600           # JWT token expiration time in seconds
+    users:
+      - username: admin         # Dashboard login credentials
+        password: admin         # Change this in production
+
+authentication:
+  secret: "secret"              # Change this in production
+  expire_time: 3600
+  users:
+    - username: admin
+      password: admin          # Change this in production
+
+
