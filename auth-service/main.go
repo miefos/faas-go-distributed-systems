@@ -13,6 +13,7 @@ import (
 func main() {
 	// Initialize NATS connection and KV store
 	natsURL := os.Getenv("NATS_URL")
+	myPort := os.Getenv("SERVER_ADDRESS")
 	if natsURL == "" {
 		natsURL = "nats://localhost:4222"
 	}
@@ -29,6 +30,6 @@ func main() {
 	r.HandleFunc("/validate", handlers.ValidateHandler).Methods("GET")
 
 	// Start server
-	log.Println("Auth Service is running on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	log.Println("Auth Service is running on port", myPort)
+	log.Fatal(http.ListenAndServe(myPort, r))
 }

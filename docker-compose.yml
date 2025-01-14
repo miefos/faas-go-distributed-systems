@@ -5,11 +5,12 @@ services:
       context: ./auth-service
       dockerfile: Dockerfile
     expose:
-      - "8080"  # Only expose internally for NGINX to access
+      - "8081"  # Only expose internally for NGINX to access
     depends_on:
       - nats
     environment:
       - NATS_URL=nats://nats:4222
+      - SERVER_ADDRESS=:8081
     deploy:
       replicas: 1
       resources:
@@ -29,12 +30,12 @@ services:
       context: ./registry-service
       dockerfile: Dockerfile
     expose:
-      - "8081"  # Only expose internally for NGINX to access
+      - "8082"  # Only expose internally for NGINX to access
     depends_on:
       - nats
     environment:
       - NATS_URL=nats://nats:4222
-      - SERVER_ADDRESS=:8081
+      - SERVER_ADDRESS=:8082
       - BUCKET_NAME=functions
     deploy:
       replicas: 1
@@ -99,7 +100,7 @@ services:
     ports:
       - "9080:9080"  # HTTP port
       - "9443:9443"  # HTTPS port
-      - "9180:9180"  # Admin API port
+      #- "9180:9180"  # Admin API port
     volumes:
       - ./api-gateway/apisix_conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
     environment:
@@ -114,7 +115,7 @@ services:
     depends_on:
       - apisix
     environment:
-      APISIX_DASHBOARD_SSL_ENABLED: "false"
+      - APISIX_DASHBOARD_SSL_ENABLED="false"
     volumes:
       - ./api-gateway/apisix_conf/dashboard_config.yaml:/usr/local/apisix-dashboard/conf/conf.yaml:ro
     networks:
