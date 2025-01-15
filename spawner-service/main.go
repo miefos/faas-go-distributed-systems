@@ -19,8 +19,7 @@ import (
 type Config struct {
 	ServerAddress string
 	NATSUrl       string
-	functionTopic string
-	resultTopic   string
+	messageQueue string
 	maxContainers int
 }
 
@@ -35,18 +34,23 @@ type FunctionRequest struct {
 	Parameter      string `json:"parameter"`
 }
 
+var cfg *Config
+var cli *client.Client
+var nc *nats.Conn
+
 func main() {
-	cfg := LoadConfig()
+	cfg = LoadConfig()
 
 	// Set the Docker API version to a compatible version
 	os.Setenv("DOCKER_API_VERSION", "1.44")
 
 	// Connect to NATS
-	nc := connectToNATS(cfg.NATSUrl)
+	nc = connectToNATS(cfg.NATSUrl)
 	defer nc.Close()
 
+	var err error
 	// Create Docker client
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	cli, err = client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		log.Fatalf("Error creating Docker client: %v", err)
 	}
@@ -54,50 +58,55 @@ func main() {
 
 	log.Println("Docker client created successfully!")
 
-	// Subscribe to the function execution topic
-	_, err = nc.Subscribe(cfg.functionTopic, func(msg *nats.Msg) {
-		var req FunctionRequest
-		log.Printf("Received message: %s", msg.Data)
-		if err := json.Unmarshal(msg.Data, &req); err != nil {
-			log.Printf("Error parsing message: %v", err)
-			nc.Publish(msg.Reply, []byte("Error: invalid message format"))
-			return
-		}
-
-		// Check maxContainers
-		mu.Lock()
-		if activeContainers >= cfg.maxContainers {
-			mu.Unlock()
-			nc.Publish(msg.Reply, []byte("Error: too many active containers"))
-			return
-		}
-		activeContainers++
-		mu.Unlock()
-
-		// Go routine to manage container lifecycle
-		go func() {
-			defer func() {
-				mu.Lock()
-				activeContainers--
-				mu.Unlock()
-			}()
-
-			result, err := executeFunction(cli, req.ImageReference, req.Parameter)
-			if err != nil {
-				log.Printf("Error executing function: %v", err)
-				nc.Publish(msg.Reply, []byte(fmt.Sprintf("Error: %v", err)))
-				return
-			}
-
-			// Publish result to the result topic
-			nc.Publish(cfg.resultTopic, []byte(result))
-		}()
-	})
+	_, err = nc.QueueSubscribe(cfg.messageQueue, "worker-group", onMessage)
+	
 	if err != nil {
 		log.Fatalf("Error subscribing to topic: %v", err)
 	}
 
 	select {}
+}
+
+func onMessage(msg *nats.Msg) {
+	var req FunctionRequest
+
+	log.Printf("Received message: %s", msg.Data)
+	log.Printf("Reply topic: %s", msg.Reply)
+
+	if err := json.Unmarshal(msg.Data, &req); err != nil {
+		log.Printf("Error parsing message: %v", err)
+		nc.Publish(msg.Reply, []byte("Error: invalid message format"))
+		return
+	}
+
+	// Check maxContainers
+	mu.Lock()
+	if activeContainers >= cfg.maxContainers {
+		mu.Unlock()
+		nc.Publish(msg.Reply, []byte("Error: too many active containers"))
+		return
+	}
+	activeContainers++
+	mu.Unlock()
+
+	// Go routine to manage container lifecycle
+	go func() {
+		defer func() {
+			mu.Lock()
+			activeContainers--
+			mu.Unlock()
+		}()
+
+		result, err := executeFunction(cli, req.ImageReference, req.Parameter)
+		if err != nil {
+			log.Printf("Error executing function: %v", err)
+			nc.Publish(msg.Reply, []byte(fmt.Sprintf("Error: %v", err)))
+			return
+		}
+
+		// Publish result to the result topic
+		nc.Publish(msg.Reply, []byte(result))
+	}()
 }
 
 func connectToNATS(natsURL string) *nats.Conn {
@@ -112,42 +121,18 @@ func connectToNATS(natsURL string) *nats.Conn {
 func executeFunction(cli *client.Client, imageReference, parameter string) (string, error) {
 	ctx := context.Background()
 
-	// Check if the Docker image exists locally
-	log.Printf("Checking if image %s exists locally...", imageReference)
-	images, err := cli.ImageList(ctx, image.ListOptions{})
+	// Pull the Docker image
+	log.Printf("Pulling image %s...", imageReference)
+	reader, err := cli.ImagePull(ctx, imageReference, image.PullOptions{})
 	if err != nil {
-		return "", fmt.Errorf("Error listing images: %w", err)
+		return "", fmt.Errorf("Error pulling image: %w", err)
 	}
+	defer reader.Close()
 
-	imageExists := false
-	for _, image := range images {
-		for _, tag := range image.RepoTags {
-			if tag == imageReference {
-				imageExists = true
-				break
-			}
-		}
-		if imageExists {
-			break
-		}
-	}
-
-	if !imageExists {
-		// Pull the Docker image
-		log.Printf("Image %s not found locally. Pulling image...", imageReference)
-		reader, err := cli.ImagePull(ctx, imageReference, image.PullOptions{})
-		if err != nil {
-			return "", fmt.Errorf("Error pulling image: %w", err)
-		}
-		defer reader.Close()
-
-		// Read the output to ensure the image is pulled
-		_, err = io.Copy(os.Stdout, reader)
-		if err != nil {
-			return "", fmt.Errorf("Error reading image pull response: %w", err)
-		}
-	} else {
-		log.Printf("Image %s found locally.", imageReference)
+	// Read the output to ensure the image is pulled
+	_, err = io.Copy(os.Stdout, reader)
+	if err != nil {
+		return "", fmt.Errorf("Error reading image pull response: %w", err)
 	}
 
 	// Create Docker container
@@ -199,10 +184,9 @@ func executeFunction(cli *client.Client, imageReference, parameter string) (stri
 }
 
 func LoadConfig() *Config {
-	serverAddress := getEnv("SERVER_ADDRESS", ":8082")
+	serverAddress := getEnv("SERVER_ADDRESS", ":8083")
 	natsUrl := getEnv("NATS_URL", "nats://localhost:4222")
-	functionTopic := getEnv("FUNCTION_TOPIC", "functions.execute")
-	resultTopic := getEnv("RESULT_TOPIC", "functions.results")
+	messageQueue := getEnv("INBOUND_TOPIC", "functions.execute")
 	maxContainers, err := strconv.Atoi(getEnv("MAX_CONTAINERS", "10"))
 	if err != nil {
 		log.Fatalf("Error parsing MAX_CONTAINERS: %v", err)
@@ -211,8 +195,7 @@ func LoadConfig() *Config {
 	return &Config{
 		ServerAddress: serverAddress,
 		NATSUrl:       natsUrl,
-		functionTopic: functionTopic,
-		resultTopic:   resultTopic,
+		messageQueue: messageQueue,
 		maxContainers: maxContainers,
 	}
 }
