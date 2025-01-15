@@ -51,6 +51,35 @@ services:
     networks:
       - faas-app-network
 
+  spawner-service:
+    build:
+      context: ./spawner-service
+      dockerfile: Dockerfile
+    expose:
+      - "8083"  # Only expose internally for NGINX to access
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # Access to the Docker daemon
+    depends_on:
+      - nats
+    environment:
+      - NATS_URL=nats://nats:4222
+      - SERVER_ADDRESS=:8083
+      - MESSAGE_QUEUE=functions.execute
+      - MAX_CONTAINERS=10
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+    networks:
+      - faas-app-network
+
   nats:
     image: nats:latest
     expose:
@@ -67,6 +96,7 @@ services:
     networks:
       - faas-app-network
 
+  # REMOVE IN PRODUCTION
   nginx:
     image: nginx:latest
     volumes:
