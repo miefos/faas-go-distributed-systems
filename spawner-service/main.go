@@ -121,18 +121,42 @@ func connectToNATS(natsURL string) *nats.Conn {
 func executeFunction(cli *client.Client, imageReference, parameter string) (string, error) {
 	ctx := context.Background()
 
-	// Pull the Docker image
-	log.Printf("Pulling image %s...", imageReference)
-	reader, err := cli.ImagePull(ctx, imageReference, image.PullOptions{})
+	// Check if the Docker image exists locally
+	log.Printf("Checking if image %s exists locally...", imageReference)
+	images, err := cli.ImageList(ctx, image.ListOptions{})
 	if err != nil {
-		return "", fmt.Errorf("Error pulling image: %w", err)
+		return "", fmt.Errorf("Error listing images: %w", err)
 	}
-	defer reader.Close()
 
-	// Read the output to ensure the image is pulled
-	_, err = io.Copy(os.Stdout, reader)
-	if err != nil {
-		return "", fmt.Errorf("Error reading image pull response: %w", err)
+	imageExists := false
+	for _, image := range images {
+		for _, tag := range image.RepoTags {
+			if tag == imageReference {
+				imageExists = true
+				break
+			}
+		}
+		if imageExists {
+			break
+		}
+	}
+
+	if !imageExists {
+		// Pull the Docker image
+		log.Printf("Image %s not found locally. Pulling image...", imageReference)
+		reader, err := cli.ImagePull(ctx, imageReference, image.PullOptions{})
+		if err != nil {
+			return "", fmt.Errorf("Error pulling image: %w", err)
+		}
+		defer reader.Close()
+
+		// Read the output to ensure the image is pulled
+		_, err = io.Copy(os.Stdout, reader)
+		if err != nil {
+			return "", fmt.Errorf("Error reading image pull response: %w", err)
+		}
+	} else {
+		log.Printf("Image %s found locally.", imageReference)
 	}
 
 	// Create Docker container
