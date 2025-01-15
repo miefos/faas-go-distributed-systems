@@ -17,7 +17,6 @@ import (
 )
 
 type Config struct {
-	ServerAddress string
 	NATSUrl       string
 	messageQueue string
 	maxContainers int
@@ -208,7 +207,6 @@ func executeFunction(cli *client.Client, imageReference, parameter string) (stri
 }
 
 func LoadConfig() *Config {
-	serverAddress := getEnv("SERVER_ADDRESS", ":8083")
 	natsUrl := getEnv("NATS_URL", "nats://localhost:4222")
 	messageQueue := getEnv("INBOUND_TOPIC", "functions.execute")
 	maxContainers, err := strconv.Atoi(getEnv("MAX_CONTAINERS", "10"))
@@ -217,7 +215,6 @@ func LoadConfig() *Config {
 	}
 
 	return &Config{
-		ServerAddress: serverAddress,
 		NATSUrl:       natsUrl,
 		messageQueue: messageQueue,
 		maxContainers: maxContainers,

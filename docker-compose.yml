@@ -55,15 +55,12 @@ services:
     build:
       context: ./spawner-service
       dockerfile: Dockerfile
-    expose:
-      - "8083"  # Only expose internally for NGINX to access
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # Access to the Docker daemon
     depends_on:
       - nats
     environment:
       - NATS_URL=nats://nats:4222
-      - SERVER_ADDRESS=:8083
       - MESSAGE_QUEUE=functions.execute
       - MAX_CONTAINERS=10
     deploy:

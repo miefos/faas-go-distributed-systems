@@ -1,6 +1,6 @@
-# Worker Spawner
+# Spawner Service
 
-The **Worker Spawner** is a Go-based microservice designed to manage the execution of containerized functions dynamically. It listens to a message queue (NATS) for function execution requests, spawns containers to execute the functions, and sends back the results. This service does not expose REST APIs; its interactions are entirely based on NATS messaging.
+The **Spawner Service** is a Go-based microservice designed to manage the execution of containerized functions dynamically. It listens to a message queue (NATS) for function execution requests, spawns containers to execute the functions, and sends back the results. This service does not expose REST APIs; its interactions are entirely based on NATS messaging.
 
 ## Disclaimer: library used 
 Pay attention on the libraries used:
@@ -8,7 +8,7 @@ Pay attention on the libraries used:
 - "github.com/docker/docker/api/types/image"
 - "github.com/docker/docker/api/types/container"
 Those libraries change often (definition of the functions and types). If you want to modify this code, check the official documentation at link:
-[Documentation](https://pkg.go.dev/github.com/docker/docker/client)  :)
+[Documentation](https://pkg.go.dev/github.com/docker/docker/client).
 
 ---
 
@@ -24,6 +24,7 @@ Those libraries change often (definition of the functions and types). If you wan
 Ensure the following environment variables or configurations:
 - `NATS_URL`: URL of the NATS server (default: `nats://localhost:4222`)
 - `MAX_CONTAINERS`: Maximum number of active containers allowed (default: `5`)
+- `MESSAGE_QUEUE`: Name of the queue where it waits for commands (default: `functions.execute`)
 
 ---
 
@@ -65,7 +66,7 @@ Ensure the following environment variables or configurations:
    - Passes the `parameter` as the command to be executed inside the container.
    - Waits for the container to complete execution and captures its output.
 3. **Result Publication**:
-   - Publishes the container's output to the `functions.results` topic on NATS, that is user's queue.
+   - Publishes the container's output as a reply on the requester's topic on NATS, that is user's queue.
 4. **Cleanup**:
    - Ensures proper cleanup by removing the container after execution.
 
@@ -120,12 +121,7 @@ Use the `nats` CLI to send test requests:
 
 ### Send Execution Request
 ```bash
-nats pub functions.execute '{"image_reference": "python:3.11-slim", "parameter": "python3 -c \"print('Hello, World!')\""}'
-```
-
-### Listen for Results
-```bash
-nats sub functions.results
+nats request functions.execute '{"image_reference": "python:3.11-slim", "parameter": "python3 -c \"print('Hello, World!')\""}'
 ```
 
 ---
