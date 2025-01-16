@@ -25,12 +25,18 @@ go mod download github.com/google/uuid
 
 ## CURL examples
 ### Register
-```curl -X POST http://127.0.0.1:8080/register -H "Content-Type: application/json" -d '{"username":"your_username", "password":"your_password"}'```
+```
+curl -X POST http://localhost/auth/register -H "Content-Type: application/json" -d '{"username":"your_username", "password":"your_password"}'
+```
 
 ### Login
-```curl -X POST http://127.0.0.1:8080/login -H "Content-Type: application/json" -d '{"username":"your_username", "password":"your_password"}'```
+```
+curl -X POST http://localhost/auth/login -H "Content-Type: application/json" -d '{"username":"your_username", "password":"your_password"}'
+```
 
 ### JWT token validation
-```curl -X GET http://127.0.0.1:8080/validate -H "Authorization: <token>"```
+```
+curl http://localhost/auth/validate -H "Authorization: <token>"
+```
 
 ![alt text](images/console-registration.png)

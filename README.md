@@ -11,6 +11,11 @@ docker build -t registry-service:latest ./registry-service
 docker build -t spawner-service:latest ./spawner-service
 ```
 
+Might need to init swarm:
+```
+docker swarm init
+```
+
 ### Docker compose deployment
 To deploy the services using docker compose, simply run the following command:
 ```bash
@@ -20,6 +25,9 @@ To scale services, simply add the `--scale` flag to the command:
 ```bash
 docker compose up --scale auth-service=<number> --scale registry-service=<number> --scale execution-service=<number>
 ```
+
+### API Gateway setup
+See [README.md](api-gateway/README.md)
 
 ### Swarm deployment
 To use swarm, first initialize the swarm, then deploy the stack:
@@ -39,19 +47,15 @@ docker stack rm faas
 ```
 
 ## Modules
-- The auth service is available INTERNALLY at http://auth-service:8080, EXTERNALLY at http://x.x.x.x:4000.
-- The registry service is available INTERNALLY at http://registry-service:8081, EXTERNALLY at http://x.x.x.x:5000.
+- The auth service is available INTERNALLY at http://auth-service:8081, EXTERNALLY at http://localhost/auth.
+- The registry service is available INTERNALLY at http://registry-service:8082, EXTERNALLY at http://localhost/registry.
 
-### APISIX
-I have no freaking clue of what this does or how it works, we'll explore it.
-
-### API Gateway
+### API Gateway / APISIX
 The entrypoint to all the services, this is the only service that is exposed to the outside world.
 
-- [ ] Define the API functionalities
-- [ ] Implement rerouting to Auth service
-- [ ] Implement rerouting to Registry service
-- [ ] Implement connection to NATS Messaging service
+- [x] Implement rerouting to Auth service
+- [x] Implement rerouting to Registry service
+- [ ] Implement JWT validation
 
 ### Auth service
 User auth & registration

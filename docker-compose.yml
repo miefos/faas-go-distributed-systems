@@ -139,11 +139,13 @@ services:
     depends_on:
       - etcd
     ports:
+      - "80:9080"  # HTTP port
       - "9080:9080"  # HTTP port
       - "9443:9443"  # HTTPS port
-      #- "9180:9180"  # Admin API port
+      - "9180:9180"  # Admin API port
     volumes:
-      - ./api-gateway/apisix_conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+      - ./api-gateway/apisix/conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+      - ./api-gateway/setup.sh:/usr/local/apisix/setup.sh:ro
     environment:
       APISIX_ADMIN_KEY: "edd1c9f034335f136f87ad84b625c8f1"
     networks:
@@ -158,7 +160,7 @@ services:
     environment:
       - APISIX_DASHBOARD_SSL_ENABLED="false"
     volumes:
-      - ./api-gateway/apisix_conf/dashboard_config.yaml:/usr/local/apisix-dashboard/conf/conf.yaml:ro
+      - ./api-gateway/apisix/conf/dashboard_config.yaml:/usr/local/apisix-dashboard/conf/conf.yaml:ro
     networks:
       - faas-app-network
 
