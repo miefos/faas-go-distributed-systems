@@ -22,6 +22,11 @@ services:
         condition: on-failure
     networks:
       - faas-app-network
+    healthcheck: # Health check for the service
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   registry-service:
     image: registry-service:latest
@@ -46,6 +51,11 @@ services:
         condition: unless-stopped
     networks:
       - faas-app-network
+    healthcheck: # Health check for the service
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   spawner-service:
     image: spawner-service:latest
@@ -118,6 +128,7 @@ services:
     ports:
       - "4000:4000"  # External port mapped to auth-service
       - "5000:5000"  # External port mapped to registry-service
+      - "6000:6000" # External port mapped to spawner-service
     networks:
       - faas-app-network
 
