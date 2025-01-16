@@ -43,31 +43,6 @@ services:
     networks:
       - faas-app-network
 
-    registry-service:
-      build:
-        context: ./publisher-service
-        dockerfile: Dockerfile
-      expose:
-        - "8083"  # Only expose internally for NGINX to access
-      depends_on:
-        - nats
-      environment:
-        - NATS_URL=nats://nats:4222
-        - SERVER_ADDRESS=:8083
-      deploy:
-        replicas: 1
-        resources:
-          limits:
-            cpus: '0.5'
-            memory: 512M
-          reservations:
-            cpus: '0.25'
-            memory: 256M
-        restart_policy:
-          condition: on-failure
-      networks:
-        - faas-app-network
-
   spawner-service:
     image: spawner-service:latest
     volumes:
