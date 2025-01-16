@@ -11,8 +11,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// TODO: Change to use the random UUID as a body parameter
-
 func main() {
 	// Load configuration
 	cfg := config.LoadConfig()
