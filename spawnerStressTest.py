@@ -8,8 +8,8 @@ NATS_SERVER = "nats://localhost:4222"
 SUBJECT = "functions.execute"
 PAYLOAD = b"{\"image_reference\": \"fliuzzi02/custom-echo-image:latest\", \"parameter\": \"Hello, world!\"}"
 TIMEOUT = 10000 # 10 seconds
-NUM_THREADS = 100
-NUM_REQUESTS = 1
+NUM_THREADS = 20
+NUM_REQUESTS = 3
 
 # Statistics
 total_requests = 0

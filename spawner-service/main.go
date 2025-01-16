@@ -35,30 +35,16 @@ type FunctionRequest struct {
 }
 
 var cfg *Config
-var cli *client.Client
 var nc *nats.Conn
 
 func main() {
 	cfg = LoadConfig()
 
-	// Set the Docker API version to a compatible version
-	os.Setenv("DOCKER_API_VERSION", "1.44")
-
 	// Connect to NATS
 	nc = connectToNATS(cfg.NATSUrl)
 	defer nc.Close()
 
-	var err error
-	// Create Docker client
-	cli, err = client.NewClientWithOpts(client.FromEnv)
-	if err != nil {
-		log.Fatalf("Error creating Docker client: %v", err)
-	}
-	defer cli.Close()
-
-	log.Println("Docker client created successfully!")
-
-	_, err = nc.QueueSubscribe(cfg.messageQueue, "worker-group", onMessage)
+	_, err := nc.QueueSubscribe(cfg.messageQueue, "worker-group", onMessage)
 	
 	if err != nil {
 		log.Fatalf("Error subscribing to topic: %v", err)
@@ -92,7 +78,7 @@ func onMessage(msg *nats.Msg) {
 func startExecutionRoutine(msg *nats.Msg, req FunctionRequest) {
 
 	startTime := time.Now()
-	result, err := executeContainer(cli, req.ImageReference, req.Parameter)
+	result, err := spawnContainer(req.ImageReference, req.Parameter)
 	executionTime := time.Since(startTime)
 	
 	log.Printf("Execution time for container %s: %v", req.ImageReference, executionTime)
@@ -111,7 +97,16 @@ func startExecutionRoutine(msg *nats.Msg, req FunctionRequest) {
 	mu.Unlock()
 }
 
-func executeContainer(cli *client.Client, imageReference, parameter string) (string, error) {
+func spawnContainer(imageReference, parameter string) (string, error) {
+	// Create Docker client
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Fatalf("Error creating Docker client: %v", err)
+	}
+	defer cli.Close()
+
+	log.Println("Docker client created successfully!")
+
 	ctx := context.Background()
 
 	// Check if the Docker image exists locally
