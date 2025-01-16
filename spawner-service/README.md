@@ -121,7 +121,7 @@ Use the `nats` CLI to send test requests:
 
 ### Send Execution Request
 ```bash
-nats request functions.execute '{"image_reference": "python:3.11-slim", "parameter": "python3 -c \"print('Hello, World!')\""}'
+nats request functions.execute '{"image_reference": "fliuzzi02/custom-echo-image:latest", "parameter": "Hello, world!"}'
 ```
 
 ---

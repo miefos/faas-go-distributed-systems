@@ -3,14 +3,39 @@
 ## Description
 
 ## Launching options
-To launch the project with docker compose, simply run the following command:
+### Preparation
+First build the docker images:
+```bash
+docker build -t auth-service:latest ./auth-service
+docker build -t registry-service:latest ./registry-service
+docker build -t spawner-service:latest ./spawner-service
+```
+
+### Docker compose deployment
+To deploy the services using docker compose, simply run the following command:
 ```bash
 docker compose up
 ```
-
 To scale services, simply add the `--scale` flag to the command:
 ```bash
 docker compose up --scale auth-service=<number> --scale registry-service=<number> --scale execution-service=<number>
+```
+
+### Swarm deployment
+To use swarm, first initialize the swarm, then deploy the stack:
+```bash
+docker swarm init
+docker stack deploy -c docker-compose.yml faas
+```
+
+To manually scale services in swarm, use the `docker service scale` command:
+```bash
+docker service scale faas_auth-service=<number> faas_registry-service=<number> faas_execution-service=<number>
+```
+
+To remove the swarm stack, use the `docker stack rm` command:
+```bash
+docker stack rm faas
 ```
 
 ## Modules
@@ -43,8 +68,10 @@ Registering & unregistering functions
 
 Details can be found here: [Registry service](registry-service/README.md)
 
-### Execution service
-Executing functions
+### Spawner service
+It executes functions by spawning workers as containers from an image reference and a string argument.
+
+Details can be found here: [Spawner service](spawner-service/README.md)
 
 ### NATS
 #### Monitoring at localhost:8222
