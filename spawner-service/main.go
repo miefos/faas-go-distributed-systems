@@ -85,31 +85,22 @@ func onMessage(msg *nats.Msg) {
 	mu.Unlock()
 
 	// Go routine to manage container lifecycle
-	go func() {
-		defer func() {
-			mu.Lock()
-			activeContainers--
-			mu.Unlock()
-		}()
-
-		result, err := executeFunction(cli, req.ImageReference, req.Parameter)
-		if err != nil {
-			nc.Publish(msg.Reply, []byte(fmt.Sprintf("Error: %v", err)))
-			return
-		}
-
-		// Publish result to the result topic
-		nc.Publish(msg.Reply, []byte(result))
-	}()
+	go startExecutionRoutine(msg, req)
 }
 
-func connectToNATS(natsURL string) *nats.Conn {
-	nc, err := nats.Connect(natsURL)
+func startExecutionRoutine(msg *nats.Msg, req FunctionRequest) {
+	result, err := executeFunction(cli, req.ImageReference, req.Parameter)
 	if err != nil {
-		log.Fatalf("Error connecting to NATS: %v", err)
+		nc.Publish(msg.Reply, []byte(fmt.Sprintf("Error: %v", err)))
+		return
 	}
-	log.Println("Connected to NATS successfully:", natsURL)
-	return nc
+
+	// Publish result to the result topic
+	nc.Publish(msg.Reply, []byte(result))
+
+	mu.Lock()
+	activeContainers--
+	mu.Unlock()
 }
 
 func executeFunction(cli *client.Client, imageReference, parameter string) (string, error) {
@@ -194,6 +185,15 @@ func executeFunction(cli *client.Client, imageReference, parameter string) (stri
 		return "", fmt.Errorf("Error reading container output: %w", err)
 	}
 	return string(output), nil
+}
+
+func connectToNATS(natsURL string) *nats.Conn {
+	nc, err := nats.Connect(natsURL)
+	if err != nil {
+		log.Fatalf("Error connecting to NATS: %v", err)
+	}
+	log.Println("Connected to NATS successfully:", natsURL)
+	return nc
 }
 
 func LoadConfig() *Config {
