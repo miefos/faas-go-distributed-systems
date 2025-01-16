@@ -3,37 +3,38 @@ package main
 import (
 	"log"
 	"net/http"
+	"publisher-service/config"
 	"publisher-service/handlers"
 
+	"github.com/gorilla/mux"
 	"github.com/nats-io/nats.go"
-
-	"publisher-service/config"
 )
 
 func main() {
-	log.Printf("Connection to NATS")
+	log.Println("Starting publisher-service...")
+
+	// Carica la configurazione
 	cfg := config.LoadConfig()
 
+	// Connetti a NATS
+	log.Printf("Connecting to NATS at %s...", cfg.NATS_URL)
 	nc, err := nats.Connect(cfg.NATS_URL)
-	log.Printf("Connectin to %s ...", cfg.NATS_URL)
-
 	if err != nil {
-		log.Printf("Error connecting %v", err)
+		log.Fatalf("Error connecting to NATS: %v", err)
 	}
+	defer nc.Close()
+	log.Println("Connected to NATS successfully.")
 
-	log.Printf("Connection successful")
-	/*
-		err = nc.Publish("topic", []byte("Ciao"))
-		if err != nil {
-			log.Printf("error %v\n", err)
-		}*/
+	// Inizializza il router
+	r := mux.NewRouter()
 
+	// Configura l'handler
 	publisherHandler := handlers.NewPublisherHandler(nc, "functions.execution", 30)
+	r.HandleFunc("/publish", publisherHandler.PublishHandlerMethod).Methods("POST")
 
-	http.HandleFunc("/publisher/publish", publisherHandler.PublishHandlerMethod)
-	log.Printf("server listening on port 8083")
-	if err := http.ListenAndServe(cfg.SERVER_ADDRESS, nil); err != nil { //prima inizializzazione e poi condizione vera
-		log.Printf("error running server: %v\n", err)
+	// Avvia il server HTTP
+	log.Printf("Publisher-service is running on port %s", cfg.SERVER_ADDRESS)
+	if err := http.ListenAndServe(cfg.SERVER_ADDRESS, r); err != nil {
+		log.Fatalf("Error starting server: %v", err)
 	}
-
 }

@@ -33,6 +33,7 @@ func NewPublisherHandler(nc *nats.Conn, requestTopic string, replyTimeout int) *
 
 func (h *PublisherHandler) PublishHandlerMethod(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Publish Handler called")
+
 	var functionRequest models.FunctionMetadata
 
 	// Decodifica il corpo della richiesta in un oggetto FunctionMetadata

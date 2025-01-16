@@ -1,7 +1,11 @@
 version: '3.8'
 services:
   auth-service:
-    image: auth-service:latest
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    expose:
+      - "8081"  # Only expose internally for NGINX to access
     depends_on:
       - nats1
       - nats2
@@ -29,7 +33,11 @@ services:
       retries: 3
 
   registry-service:
-    image: registry-service:latest
+    build:
+      context: ./registry-service
+      dockerfile: Dockerfile
+    expose:
+      - "8082"  # Only expose internally for NGINX to access
     depends_on:
       - nats1
       - nats2
@@ -57,8 +65,36 @@ services:
       timeout: 5s
       retries: 3
 
+  publisher-service:
+    build:
+      context: ./publisher-service
+      dockerfile: Dockerfile
+    expose:
+      - "8083"  # Only expose internally for NGINX to access
+    depends_on:
+      - nats
+    environment:
+      - NATS_URL=nats://nats:4222
+      - SERVER_ADDRESS=:8083
+      - BUCKET_NAME=functions
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+    networks:
+      - faas-app-network
+
   spawner-service:
-    image: spawner-service:latest
+    build:
+      context: ./spawner-service
+      dockerfile: Dockerfile
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # Access to the Docker daemon
     depends_on:
@@ -68,7 +104,7 @@ services:
       - NATS1_URL=nats://nats1:4222
       - NATS2_URL=nats://nats2:4222
       - MESSAGE_QUEUE=functions.execute
-      - MAX_CONTAINERS=100
+      - MAX_CONTAINERS=10
     deploy:
       replicas: 1
       resources:
@@ -85,6 +121,8 @@ services:
 
   nats1:
     image: nats:latest
+    expose:
+      - "4222"  # Expose NATS for external and internal communication
     ports:
       - "4222:4222"  # External port mapped to NATS
       - "8222:8222"  # Enable monitoring on port 8222
@@ -180,5 +218,4 @@ volumes:
 
 networks:
   faas-app-network:
-    driver: overlay
-    attachable: true
+    driver: bridge
