@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
 // LoginHandler handles user authentication
@@ -25,7 +26,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	entry, err := utils.KvStore.Get(userPayload.Username)
 	if err != nil || entry == nil {
 		http.Error(w, "User not found", http.StatusNotFound)
-		return
+		os.Exit(-1)
 	}
 
 	// Unmarshal the user data from the NATS KV store

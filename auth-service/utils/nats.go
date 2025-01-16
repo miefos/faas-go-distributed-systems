@@ -8,18 +8,20 @@ import (
 var NatsConn *nats.Conn
 var KvStore nats.KeyValue
 
-func InitNATSConnection(natsURL string) {
+func InitNATSConnection(natsURL string) int {
 	log.Printf("Connecting to NATS at %s", natsURL)
 	var err error
 	NatsConn, err = nats.Connect(natsURL)
 	if err != nil {
 		log.Fatalf("Error connecting to NATS: %v", err)
+		return -1
 	}
 	log.Println("Connected to NATS")
+	return 0
 }
 
 // InitKVStore initializes the NATS Key-Value store
-func InitKVStore(bucketName string) {
+func InitKVStore(bucketName string) int {
 	var err error
 	var js nats.JetStreamContext
 
@@ -33,7 +35,9 @@ func InitKVStore(bucketName string) {
 	})
 	if err != nil {
 		log.Fatalf("Error creating KV store: %v", err)
+		return -1
 	}
 
 	log.Println("NATS KV Store initialized")
+	return 0
 }

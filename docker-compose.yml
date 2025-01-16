@@ -3,9 +3,11 @@ services:
   auth-service:
     image: auth-service:latest
     depends_on:
-      - nats
+      - nats1
+      - nats2
     environment:
-      - NATS_URL=nats://nats:4222
+      - NATS1_URL=nats://nats1:4222
+      - NATS2_URL=nats://nats2:4222
       - SERVER_ADDRESS=:8081
     deploy:
       replicas: 1
@@ -24,9 +26,11 @@ services:
   registry-service:
     image: registry-service:latest
     depends_on:
-      - nats
+      - nats1
+      - nats2
     environment:
-      - NATS_URL=nats://nats:4222
+      - NATS1_URL=nats://nats1:4222
+      - NATS2_URL=nats://nats2:4222
       - SERVER_ADDRESS=:8082
       - BUCKET_NAME=functions
     deploy:
@@ -39,7 +43,7 @@ services:
           cpus: '0.25'
           memory: 256M
       restart_policy:
-        condition: on-failure
+        condition: unless-stopped
     networks:
       - faas-app-network
 
@@ -48,9 +52,11 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # Access to the Docker daemon
     depends_on:
-      - nats
+      - nats1
+      - nats2
     environment:
-      - NATS_URL=nats://nats:4222
+      - NATS1_URL=nats://nats1:4222
+      - NATS2_URL=nats://nats2:4222
       - MESSAGE_QUEUE=functions.execute
       - MAX_CONTAINERS=100
     deploy:
@@ -63,11 +69,11 @@ services:
           cpus: '0.25'
           memory: 256M
       restart_policy:
-        condition: on-failure
+        condition: unless-stopped
     networks:
       - faas-app-network
 
-  nats:
+  nats1:
     image: nats:latest
     ports:
       - "4222:4222"  # External port mapped to NATS
@@ -76,8 +82,28 @@ services:
       - "--jetstream"
       - "--store_dir=/data/jetstream"  # Directory for JetStream data
       - "--http_port=8222"  # Enable monitoring on port 8222
+      - "--cluster=nats://nats1:6222"  # Cluster address
+      - "--cluster_name=faas-cluster"  # Cluster name
+      - "--server_name=nats"  # Server name
+      - "--routes=nats://nats2:6222"  # Routes to other servers
     volumes:
-      - ./nats-data:/data  # Persistent storage for JetStream
+      - ./nats1-data:/data  # Persistent storage for JetStream
+    networks:
+      - faas-app-network
+
+  nats2:
+    image: nats:latest
+    depends_on:
+      - nats1
+    command:
+      - "--jetstream"
+      - "--store_dir=/data/jetstream"  # Directory for JetStream data
+      - "--cluster=nats://nats2:6222"  # Cluster address
+      - "--cluster_name=faas-cluster"  # Cluster name
+      - "--server_name=nats2"  # Server name
+      - "--routes=nats://nats1:6222"  # Routes to other servers
+    volumes:
+      - ./nats2-data:/data  # Persistent storage for JetStream
     networks:
       - faas-app-network
 

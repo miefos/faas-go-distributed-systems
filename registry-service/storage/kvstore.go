@@ -14,14 +14,21 @@ type KVStore struct {
 	bucket nats.KeyValue
 }
 
-func NewKVStore(natsUrl, bucketName string) (*KVStore, error) {
-	nc, err := nats.Connect(natsUrl)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to NATS: %w", err)
-	} else {
-		log.Printf("Connected to NATS")
-	}
+var nc *nats.Conn
 
+func InitNATSConnection(natsURL string) int {
+	log.Printf("Connecting to NATS at %s", natsURL)
+	var err error
+	nc, err = nats.Connect(natsURL)
+	if err != nil {
+		log.Fatalf("Error connecting to NATS: %v", err)
+		return -1
+	}
+	log.Println("Connected to NATS")
+	return 0
+}
+
+func NewKVStore(bucketName string) (*KVStore, error) {
 	js, err := nc.JetStream()
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize JetStream: %w", err)

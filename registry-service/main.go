@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"registry-service/handlers"
 	"registry-service/config"
@@ -15,10 +16,18 @@ func main() {
 	// Load configuration
 	cfg := config.LoadConfig()
 
+	if(storage.InitNATSConnection(cfg.NATS1Url) != 0){
+		if(storage.InitNATSConnection(cfg.NATS2Url) != 0){
+			log.Fatalf("Error connecting to all NATS servers")
+			os.Exit(-1)
+		}
+	}
+
 	// Initialize NATS KeyValueStore
-	kvStore, err := storage.NewKVStore(cfg.NATSUrl, cfg.BucketName)
+	kvStore, err := storage.NewKVStore(cfg.BucketName)
 	if err != nil {
 		log.Fatalf("Failed to initialize KeyValueStore: %v", err)
+		os.Exit(-1)
 	} else {
 		log.Println("KeyValueStore initialized")
 	}

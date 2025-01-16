@@ -6,18 +6,21 @@ import (
 
 type Config struct {
 	ServerAddress string
-	NATSUrl       string
+	NATS1Url       string
+	NATS2Url       string
 	BucketName    string
 }
 
 func LoadConfig() *Config {
 	serverAddress := getEnv("SERVER_ADDRESS", ":8081")
-	natsUrl := getEnv("NATS_URL", "nats://localhost:4222")
+	nats1Url := getEnv("NATS1_URL", "nats://localhost:4222")
+	nats2Url := getEnv("NATS2_URL", "")
 	bucketName := getEnv("BUCKET_NAME", "functions")
 
 	return &Config{
 		ServerAddress: serverAddress,
-		NATSUrl:       natsUrl,
+		NATS1Url:       nats1Url,
+		NATS2Url:       nats2Url,
 		BucketName:    bucketName,
 	}
 }

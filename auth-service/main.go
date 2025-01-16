@@ -12,14 +12,24 @@ import (
 
 func main() {
 	// Initialize NATS connection and KV store
-	natsURL := os.Getenv("NATS_URL")
+	nats1URL := os.Getenv("NATS1_URL")
+	nats2URL := os.Getenv("NATS2_URL")
 	myPort := os.Getenv("SERVER_ADDRESS")
-	if natsURL == "" {
-		natsURL = "nats://localhost:4222"
+	if nats1URL == "" {
+		nats1URL = "nats://localhost:4222"
 	}
 
-	utils.InitNATSConnection(natsURL)
-	utils.InitKVStore("users")
+	if(utils.InitNATSConnection(nats1URL) != 0){
+		if(utils.InitNATSConnection(nats2URL) != 0){
+			log.Fatalf("Error connecting to all NATS servers")
+			os.Exit(-1)
+		}
+	}
+
+	if(utils.InitKVStore("users") != 0){
+		log.Fatalf("Error initializing KV store")
+		os.Exit(-1)
+	}
 
 	// Create a new router
 	r := mux.NewRouter()

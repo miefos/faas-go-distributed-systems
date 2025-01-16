@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/google/uuid"
 )
@@ -57,7 +58,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	result, err := utils.KvStore.Put(user.Username, userDataJSON)
 	if err != nil {
 		http.Error(w, "Error storing user data", http.StatusInternalServerError)
-		return
+		os.Exit(-1)
 	}
 
 	// Send a success response

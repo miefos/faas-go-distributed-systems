@@ -18,7 +18,8 @@ import (
 )
 
 type Config struct {
-	NATSUrl       string
+	NATS1Url       string
+	NATS2Url       string
 	messageQueue string
 	maxContainers int
 }
@@ -41,13 +42,21 @@ func main() {
 	cfg = LoadConfig()
 
 	// Connect to NATS
-	nc = connectToNATS(cfg.NATSUrl)
+	nc = connectToNATS(cfg.NATS1Url)
+	if(nc == nil){
+		nc = connectToNATS(cfg.NATS2Url)
+		if(nc == nil){
+			log.Fatalf("Error connecting to all NATS servers")
+			os.Exit(-1)
+		}
+	}
 	defer nc.Close()
 
 	_, err := nc.QueueSubscribe(cfg.messageQueue, "worker-group", onMessage)
 	
 	if err != nil {
 		log.Fatalf("Error subscribing to topic: %v", err)
+		os.Exit(-1)
 	}
 
 	select {}
@@ -194,13 +203,15 @@ func connectToNATS(natsURL string) *nats.Conn {
 	nc, err := nats.Connect(natsURL)
 	if err != nil {
 		log.Fatalf("Error connecting to NATS: %v", err)
+		return nil
 	}
 	log.Println("Connected to NATS successfully:", natsURL)
 	return nc
 }
 
 func LoadConfig() *Config {
-	natsUrl := getEnv("NATS_URL", "nats://localhost:4222")
+	nats1Url := getEnv("NATS1_URL", "nats://localhost:4222")
+	nats2Url := getEnv("NATS2_URL", "")
 	messageQueue := getEnv("INBOUND_TOPIC", "functions.execute")
 	maxContainers, err := strconv.Atoi(getEnv("MAX_CONTAINERS", "10"))
 	if err != nil {
@@ -208,7 +219,8 @@ func LoadConfig() *Config {
 	}
 
 	return &Config{
-		NATSUrl:       natsUrl,
+		NATS1Url:       nats1Url,
+		NATS2Url:       nats2Url,
 		messageQueue: messageQueue,
 		maxContainers: maxContainers,
 	}
