@@ -69,11 +69,7 @@ func main() {
 func onMessage(msg *nats.Msg) {
 	var req FunctionRequest
 
-	log.Printf("Received message: %s", msg.Data)
-	log.Printf("Reply topic: %s", msg.Reply)
-
 	if err := json.Unmarshal(msg.Data, &req); err != nil {
-		log.Printf("Error parsing message: %v", err)
 		nc.Publish(msg.Reply, []byte("Error: invalid message format"))
 		return
 	}
@@ -98,7 +94,6 @@ func onMessage(msg *nats.Msg) {
 
 		result, err := executeFunction(cli, req.ImageReference, req.Parameter)
 		if err != nil {
-			log.Printf("Error executing function: %v", err)
 			nc.Publish(msg.Reply, []byte(fmt.Sprintf("Error: %v", err)))
 			return
 		}
@@ -121,7 +116,6 @@ func executeFunction(cli *client.Client, imageReference, parameter string) (stri
 	ctx := context.Background()
 
 	// Check if the Docker image exists locally
-	log.Printf("Checking if image %s exists locally...", imageReference)
 	images, err := cli.ImageList(ctx, image.ListOptions{})
 	if err != nil {
 		return "", fmt.Errorf("Error listing images: %w", err)
@@ -142,7 +136,6 @@ func executeFunction(cli *client.Client, imageReference, parameter string) (stri
 
 	if !imageExists {
 		// Pull the Docker image
-		log.Printf("Image %s not found locally. Pulling image...", imageReference)
 		reader, err := cli.ImagePull(ctx, imageReference, image.PullOptions{})
 		if err != nil {
 			return "", fmt.Errorf("Error pulling image: %w", err)
@@ -154,8 +147,6 @@ func executeFunction(cli *client.Client, imageReference, parameter string) (stri
 		if err != nil {
 			return "", fmt.Errorf("Error reading image pull response: %w", err)
 		}
-	} else {
-		log.Printf("Image %s found locally.", imageReference)
 	}
 
 	// Create Docker container
@@ -182,7 +173,6 @@ func executeFunction(cli *client.Client, imageReference, parameter string) (stri
 	}
 
 	// Wait for container to finish execution
-	log.Printf("Waiting for container %s to finish execution...", resp.ID)
 	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 	select {
 	case err := <-errCh:
