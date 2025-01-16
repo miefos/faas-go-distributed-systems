@@ -6,9 +6,9 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"publisher-service/models"
 	"time"
+	"bytes"
 
 	"github.com/nats-io/nats.go"
 )
@@ -34,33 +34,42 @@ func NewPublisherHandler(nc *nats.Conn, requestTopic string, replyTimeout int) *
 func (h *PublisherHandler) PublishHandlerMethod(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Publish Handler called")
 
-	var functionRequest models.FunctionMetadata
+	// Request body coming from the outside
+	var incomingRequest models.FunctionMetadata
 
 	// Decodifica il corpo della richiesta in un oggetto FunctionMetadata
-	if err := json.NewDecoder(r.Body).Decode(&functionRequest); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&incomingRequest); err != nil {
 		http.Error(w, "Errore nella deserializzazione della richiesta: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// Stampa informazioni di debug
-	log.Printf("UUID utente: %s", functionRequest.UUID)
-	log.Printf("Name: %s", functionRequest.Name)
-	log.Printf("Description: %s", functionRequest.Description)
-	log.Printf("Payload: %s", functionRequest.Payload)
+	log.Printf("UUID utente: %s", incomingRequest.UUID)
+	log.Printf("Name: %s", incomingRequest.Name)
+	log.Printf("Arguments: %s", incomingRequest.Argument)
 
-	// Ottieni la funzione completa
-	newFunctionObject, err := getFunction(&functionRequest)
+	functionArgument := incomingRequest.Argument
+
+	// Obtain all information from registry
+	retrievedCompleteImage, err := getFunction(&incomingRequest)
 	if err != nil {
 		http.Error(w, "Error retrieve function: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Converte l'oggetto in JSON per inviarlo al worker
-	payload, err := json.Marshal(newFunctionObject)
+	// Convert returned object to a json of tyoe RegistryFunction
+	var jsonCompleteImage models.RegistryFunction
+	err = json.Unmarshal(retrievedCompleteImage, &jsonCompleteImage)
 	if err != nil {
-		http.Error(w, "Error deserealization function: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error unmarshal json: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	imageReference := jsonCompleteImage.Payload
+
+	// Build payload to send to spawner as a json
+	payload := []byte(fmt.Sprintf(`{"image_reference": "%s", "parameter": "%s"}`, imageReference, functionArgument))
+
 
 	// Pubblica sulla coda NATS e ottieni la risposta
 	msg, err := h.NATSConn.Request(h.RequestTopic, payload, time.Duration(h.ReplyTimeout)*time.Second)
@@ -75,44 +84,44 @@ func (h *PublisherHandler) PublishHandlerMethod(w http.ResponseWriter, r *http.R
 	w.Write(msg.Data)
 }
 
-func getFunction(function *models.FunctionMetadata) (*models.FunctionMetadata, error) {
-	// Prepara la query string
-	query := url.Values{}
-	query.Set("uuid", function.UUID)
-	query.Set("name", function.Name)
-
-	// Costruisce l'URL completo
-	baseURL := "http://localhost:8082/retrieve"
-	fullURL := fmt.Sprintf("%s?%s", baseURL, query.Encode())
-
-	// Effettua la richiesta GET
-	log.Printf("Performing GET request to %s", fullURL)
-	resp, err := http.Get(fullURL)
+func getFunction(function *models.FunctionMetadata) ([]byte, error) {
+	// Prepare JSON body for querying the registry
+	queryBody, err := json.Marshal(map[string]string{
+		"uuid": function.UUID,
+		"name": function.Name,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("errore during GET request: %w", err)
+		return nil, fmt.Errorf("error marshaling JSON: %w", err)
+	}
+
+	// Create URL
+	baseURL := "http://registry-service:8082/retrieve"
+
+	// Create a new request with JSON body
+	req, err := http.NewRequest("GET", baseURL, bytes.NewBuffer(queryBody))
+	if err != nil {
+		return nil, fmt.Errorf("error creating new request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	// Send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error during GET request: %w", err)
 	}
 	defer resp.Body.Close()
 
-	// Verifica lo status code
+	// Check response status code
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("response error register-service: %s", resp.Status)
 	}
 
-	// Legge e deserializza la risposta JSON
+	// Deserialize JSON body
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("error read body JSON: %w", err)
+		return nil, fmt.Errorf("error reading body JSON: %w", err)
 	}
 
-	var result models.FunctionMetadata //contains functionID, functionName
-	if err := json.Unmarshal(body, &result); err != nil {
-		return nil, fmt.Errorf("error read body JSON: %w", err)
-	}
-
-	log.Printf("UUID funzione: %s", result.UUID)
-	log.Printf("Name: %s", result.Name)
-	log.Printf("Description: %s", result.Description)
-	log.Printf("Payload: %s", result.Payload)
-
-	return &result, nil
+	return body, nil
 }

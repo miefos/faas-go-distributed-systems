@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"publisher-service/config"
 	"publisher-service/handlers"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/nats-io/nats.go"
@@ -17,10 +18,15 @@ func main() {
 	cfg := config.LoadConfig()
 
 	// Connetti a NATS
-	log.Printf("Connecting to NATS at %s...", cfg.NATS_URL)
-	nc, err := nats.Connect(cfg.NATS_URL)
+	log.Printf("Connecting to NATS at %s...", cfg.NATS1_URL)
+	nc, err := nats.Connect(cfg.NATS1_URL)
 	if err != nil {
 		log.Fatalf("Error connecting to NATS: %v", err)
+		nc, err = nats.Connect(cfg.NATS2_URL)
+		if err != nil {
+			log.Fatalf("Error connecting to NATS: %v", err)
+			os.Exit(-1)
+		}
 	}
 	defer nc.Close()
 	log.Println("Connected to NATS successfully.")
@@ -29,7 +35,7 @@ func main() {
 	r := mux.NewRouter()
 
 	// Configura l'handler
-	publisherHandler := handlers.NewPublisherHandler(nc, "functions.execution", 30)
+	publisherHandler := handlers.NewPublisherHandler(nc, "functions.execute", 30)
 	r.HandleFunc("/publish", publisherHandler.PublishHandlerMethod).Methods("POST")
 
 	// Avvia il server HTTP

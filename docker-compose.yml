@@ -1,9 +1,7 @@
 version: '3.8'
 services:
   auth-service:
-    build:
-      context: ./auth-service
-      dockerfile: Dockerfile
+    image: auth-service:latest
     expose:
       - "8081"  # Only expose internally for NGINX to access
     depends_on:
@@ -33,9 +31,7 @@ services:
       retries: 3
 
   registry-service:
-    build:
-      context: ./registry-service
-      dockerfile: Dockerfile
+    image: registry-service:latest
     expose:
       - "8082"  # Only expose internally for NGINX to access
     depends_on:
@@ -66,17 +62,18 @@ services:
       retries: 3
 
   publisher-service:
-    build:
-      context: ./publisher-service
-      dockerfile: Dockerfile
+    image: publisher-service:latest
     expose:
       - "8083"  # Only expose internally for NGINX to access
+    ports:
+      - "8083:8083"  # External port mapped to publisher-service
     depends_on:
-      - nats
+      - nats1
+      - nats2
     environment:
-      - NATS_URL=nats://nats:4222
+      - NATS1_URL=nats://nats1:4222
+      - NATS2_URL=nats://nats2:4222
       - SERVER_ADDRESS=:8083
-      - BUCKET_NAME=functions
     deploy:
       replicas: 1
       resources:
@@ -92,9 +89,7 @@ services:
       - faas-app-network
 
   spawner-service:
-    build:
-      context: ./spawner-service
-      dockerfile: Dockerfile
+    image: spawner-service:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # Access to the Docker daemon
     depends_on:
