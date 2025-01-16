@@ -47,19 +47,15 @@ docker stack rm faas
 ```
 
 ## Modules
-- The auth service is available INTERNALLY at http://auth-service:8080, EXTERNALLY at http://x.x.x.x:4000.
-- The registry service is available INTERNALLY at http://registry-service:8081, EXTERNALLY at http://x.x.x.x:5000.
+- The auth service is available INTERNALLY at http://auth-service:8081, EXTERNALLY at http://localhost/auth.
+- The registry service is available INTERNALLY at http://registry-service:8082, EXTERNALLY at http://localhost/registry.
 
-### APISIX
-I have no freaking clue of what this does or how it works, we'll explore it.
-
-### API Gateway
+### API Gateway / APISIX
 The entrypoint to all the services, this is the only service that is exposed to the outside world.
 
-- [ ] Define the API functionalities
-- [ ] Implement rerouting to Auth service
-- [ ] Implement rerouting to Registry service
-- [ ] Implement connection to NATS Messaging service
+- [x] Implement rerouting to Auth service
+- [x] Implement rerouting to Registry service
+- [ ] Implement JWT validation
 
 ### Auth service
 User auth & registration
