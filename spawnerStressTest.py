@@ -8,8 +8,8 @@ NATS_SERVER = "nats://localhost:4222"
 SUBJECT = "functions.execute"
 PAYLOAD = b"{\"image_reference\": \"fliuzzi02/custom-echo-image:latest\", \"parameter\": \"Hello, world!\"}"
 TIMEOUT = 10000 # 10 seconds
-NUM_THREADS = 20
-NUM_REQUESTS = 3
+NUM_THREADS = 60
+NUM_REQUESTS = 1
 
 # Statistics
 total_requests = 0
@@ -57,6 +57,7 @@ def main():
     start_time = time.time()
 
     for _ in range(NUM_THREADS):
+        time.sleep(0.01)
         thread = threading.Thread(target=worker)
         thread.start()
         threads.append(thread)
