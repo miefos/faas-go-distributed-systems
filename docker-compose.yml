@@ -1,11 +1,7 @@
 version: '3.8'
 services:
   auth-service:
-    build:
-      context: ./auth-service
-      dockerfile: Dockerfile
-    expose:
-      - "8081"  # Only expose internally for NGINX to access
+    image: auth-service:latest
     depends_on:
       - nats
     environment:
@@ -26,11 +22,7 @@ services:
       - faas-app-network
 
   registry-service:
-    build:
-      context: ./registry-service
-      dockerfile: Dockerfile
-    expose:
-      - "8082"  # Only expose internally for NGINX to access
+    image: registry-service:latest
     depends_on:
       - nats
     environment:
@@ -52,9 +44,7 @@ services:
       - faas-app-network
 
   spawner-service:
-    build:
-      context: ./spawner-service
-      dockerfile: Dockerfile
+    image: spawner-service:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # Access to the Docker daemon
     depends_on:
@@ -62,7 +52,7 @@ services:
     environment:
       - NATS_URL=nats://nats:4222
       - MESSAGE_QUEUE=functions.execute
-      - MAX_CONTAINERS=10
+      - MAX_CONTAINERS=100
     deploy:
       replicas: 1
       resources:
@@ -79,8 +69,6 @@ services:
 
   nats:
     image: nats:latest
-    expose:
-      - "4222"  # Expose NATS for external and internal communication
     ports:
       - "4222:4222"  # External port mapped to NATS
       - "8222:8222"  # Enable monitoring on port 8222
@@ -153,4 +141,5 @@ volumes:
 
 networks:
   faas-app-network:
-    driver: bridge
+    driver: overlay
+    attachable: true
