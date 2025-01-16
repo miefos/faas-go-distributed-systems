@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/api/types/image"
@@ -89,7 +90,14 @@ func onMessage(msg *nats.Msg) {
 }
 
 func startExecutionRoutine(msg *nats.Msg, req FunctionRequest) {
-	result, err := executeFunction(cli, req.ImageReference, req.Parameter)
+
+	startTime := time.Now()
+	result, err := executeContainer(cli, req.ImageReference, req.Parameter)
+	executionTime := time.Since(startTime)
+	
+	log.Printf("Execution time for container %s: %v", req.ImageReference, executionTime)
+
+
 	if err != nil {
 		nc.Publish(msg.Reply, []byte(fmt.Sprintf("Error: %v", err)))
 		return
@@ -103,7 +111,7 @@ func startExecutionRoutine(msg *nats.Msg, req FunctionRequest) {
 	mu.Unlock()
 }
 
-func executeFunction(cli *client.Client, imageReference, parameter string) (string, error) {
+func executeContainer(cli *client.Client, imageReference, parameter string) (string, error) {
 	ctx := context.Background()
 
 	// Check if the Docker image exists locally
