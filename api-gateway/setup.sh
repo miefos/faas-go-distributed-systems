@@ -44,6 +44,9 @@ fi
 
 ADMIN_API_KEY="edd1c9f034335f136f87ad84b625c8f1"
 
+# Wait 5 seconds until docker containers start up
+sleep 5
+
 # Define a route for auth-service
 curl -X PUT http://apisix:9180/apisix/admin/routes/1 \
   -H "X-API-KEY: $ADMIN_API_KEY" \
@@ -68,6 +71,20 @@ curl -X PUT http://apisix:9180/apisix/admin/routes/2 \
           "type": "roundrobin",
           "nodes": {
             "registry-service:8082": 1
+          }
+        }
+      }'
+
+# Define a route for publisher-service
+curl -X PUT http://apisix:9180/apisix/admin/routes/3 \
+  -H "X-API-KEY: $ADMIN_API_KEY" \
+  -d '{
+        "uri": "/publisher/*",
+        "methods": ["GET", "POST", "PUT", "DELETE"],
+        "upstream": {
+          "type": "roundrobin",
+          "nodes": {
+            "registry-service:8083": 1
           }
         }
       }'

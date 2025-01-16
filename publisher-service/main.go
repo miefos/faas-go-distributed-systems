@@ -30,7 +30,7 @@ func main() {
 
 	publisherHandler := handlers.NewPublisherHandler(nc, "functions.execution", 30)
 
-	http.HandleFunc("/publish", publisherHandler.PublishHandlerMethod)
+	http.HandleFunc("/publisher/publish", publisherHandler.PublishHandlerMethod)
 	log.Printf("server listening on port 8083")
 	if err := http.ListenAndServe(cfg.SERVER_ADDRESS, nil); err != nil { //prima inizializzazione e poi condizione vera
 		log.Printf("error running server: %v\n", err)

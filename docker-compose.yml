@@ -113,9 +113,10 @@ services:
     depends_on:
       - etcd
     ports:
+      - "80:9080"  # HTTP port
       - "9080:9080"  # HTTP port
       - "9443:9443"  # HTTPS port
-#      - "9180:9180"  # Admin API port
+      - "9180:9180"  # Admin API port
     volumes:
       - ./api-gateway/apisix/conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
       - ./api-gateway/setup.sh:/usr/local/apisix/setup.sh:ro

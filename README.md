@@ -11,6 +11,11 @@ docker build -t registry-service:latest ./registry-service
 docker build -t spawner-service:latest ./spawner-service
 ```
 
+Might need to init swarm:
+```
+docker swarm init
+```
+
 ### Docker compose deployment
 To deploy the services using docker compose, simply run the following command:
 ```bash
@@ -20,6 +25,9 @@ To scale services, simply add the `--scale` flag to the command:
 ```bash
 docker compose up --scale auth-service=<number> --scale registry-service=<number> --scale execution-service=<number>
 ```
+
+### API Gateway setup
+See [README.md](api-gateway/README.md)
 
 ### Swarm deployment
 To use swarm, first initialize the swarm, then deploy the stack:

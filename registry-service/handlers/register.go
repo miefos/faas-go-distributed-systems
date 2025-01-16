@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
-	"net/http"
 	"log"
+	"net/http"
 
 	"registry-service/models"
 	"registry-service/storage"
@@ -18,10 +18,10 @@ type Handler struct {
 func RegisterRoutes(router *mux.Router, kvStore *storage.KVStore) {
 	h := &Handler{KVStore: kvStore}
 
-	router.HandleFunc("/register", h.RegisterFunction).Methods("POST")
-	router.HandleFunc("/retrieve", h.RetrieveFunction).Methods("GET")
-	router.HandleFunc("/list", h.ListFunctions).Methods("GET")
-	router.HandleFunc("/delete", h.DeleteFunction).Methods("DELETE")
+	router.HandleFunc("/registry/register", h.RegisterFunction).Methods("POST")
+	router.HandleFunc("/registry/retrieve", h.RetrieveFunction).Methods("GET")
+	router.HandleFunc("/registry/list", h.ListFunctions).Methods("GET")
+	router.HandleFunc("/registry/delete", h.DeleteFunction).Methods("DELETE")
 	// router.HandleFunc("/update", h.UpdateFunction).Methods("PUT")
 }
 

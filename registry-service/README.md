@@ -11,12 +11,12 @@ The following environment variables are required to run the service:
 The REST API to the registry service is described below. 
 
 
-| Endpoint       | Method | Description                                   |
-|----------------|--------|-----------------------------------------------|
-| /register      | POST   | Register a new function for the user.         |
-| /retrieve      | GET    | Retrieve a specific function by ID            |
-| /delete        | DELETE | Delete a specific function by ID              |
-| /list          | GET    | List all the functions registered by the user |
+| Endpoint             | Method | Description                                   |
+|----------------------|--------|-----------------------------------------------|
+| registry/register    | POST   | Register a new function for the user.         |
+| registry/retrieve    | GET    | Retrieve a specific function by ID            |
+| registry/delete      | DELETE | Delete a specific function by ID              |
+| registry/list        | GET    | List all the functions registered by the user |
 
 Here's an example of the body of the request to register a new function:
 ```json
