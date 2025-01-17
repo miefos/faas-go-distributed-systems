@@ -13,7 +13,7 @@ services:
     volumes:
       - ./secret.txt:/app/secret.txt
     deploy:
-      replicas: 3
+      replicas: 1
       resources:
         limits:
           cpus: '0.5'
@@ -44,7 +44,7 @@ services:
       - SERVER_ADDRESS=:8082
       - BUCKET_NAME=functions
     deploy:
-      replicas: 3
+      replicas: 1
       resources:
         limits:
           cpus: '0.5'
@@ -74,7 +74,7 @@ services:
       - NATS2_URL=nats://nats2:4222
       - SERVER_ADDRESS=:8083
     deploy:
-      replicas: 3
+      replicas: 1
       resources:
         limits:
           cpus: '0.5'
@@ -105,7 +105,7 @@ services:
       - MESSAGE_QUEUE=functions.execute
       - MAX_CONTAINERS=10
     deploy:
-      replicas: 5
+      replicas: 1
       resources:
         limits:
           cpus: '0.5'
@@ -168,7 +168,7 @@ services:
       - faas-app-network
 
   apisix:
-    image: apache/apisix
+    image: api-gateway:latest
     depends_on:
       - etcd
     ports:
@@ -178,12 +178,11 @@ services:
       - "9180:9180"  # Admin API port
     volumes:
       - ./api-gateway/apisix/conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
-      - ./api-gateway/setup.sh:/usr/local/apisix/setup.sh:ro
-      - ./secret.txt:/usr/local/apisix/secret.txt:ro
     environment:
       APISIX_ADMIN_KEY: "edd1c9f034335f136f87ad84b625c8f1"
     networks:
       - faas-app-network
+
 
   dashboard:
     image: apache/apisix-dashboard
