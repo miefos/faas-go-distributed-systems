@@ -1,9 +1,33 @@
 # FaaS Project
 
 ## Description
+This application is a **Function-as-a-Service (FaaS)** platform that enables users to authenticate, register custom functions, and execute them on demand. The architecture is built on microservices and leverages **APISIX** as an API Gateway and **NATS** for message brokering.
+
 ### Structure
-### Scaling
+The system consists of the following components:  
+1. **Authentication-service**: Handles user registration, login and token validation.  
+2. **Registry-service**: Manages user function metadata and stores it in NATS Key-Value buckets.  
+3. **Spawner-service**: Dynamically spawns containers to execute user functions.  
+4. **Publisher-service**: Publishes execution requests to NATS topics for worker processing.  
+### Scaling  
+The platform supports scalable execution through:  
+
+#### **Horizontal Scaling**  
+- **Workers**: Additional workers can subscribe to NATS topics, automatically distributing the workload.  
+- **Microservices**: Services can run multiple instances behind APISIX, enabling load balancing, thanks Docker compose replication.
+
+#### **go routine Scaling**
+- Each message received by the spawner-service instance starts a Go routine to manage the container lifecycle. This allows multiple containers to be
+processed concurrently within the same service instance, up to the configured limit, because each requests correspond to another go routine creation.
+
+#### ** Dynamic Resource Allocation**  
+The **worker-spawner** manages resource utilization by limiting concurrent container executions. New containers are created as demand increases. 
+
 ### Security
+The authentication system implements JWT (JSON Web Tokens) validation for secure user identification. Tokens are generated with a 72-hour expiration
+period and include user ID, username, and application-specific claims. The APISIX API gateway enforces JWT validation for all routes except /auth/*,
+using the same shared secret key (from secret.txt). The implementation uses the HS256 signing algorithm and includes standard JWT claims (iss,
+iat, exp) along with custom claims (key: "faas-app-key") for additional security.
 
 ## Launching options
 ### Preparation
