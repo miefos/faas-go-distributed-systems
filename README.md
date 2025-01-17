@@ -72,10 +72,6 @@ It executes functions by spawning workers as containers from an image reference 
 
 Details can be found here: [Spawner service](spawner-service/README.md)
 
-### NATS
-#### Monitoring at localhost:8222
-![alt text](images/nats-monitoring.png)
-
 ## Execution Example
 ### User Registration
 ```bash
@@ -92,7 +88,6 @@ This will return an authorization token that can be used to authenticate the use
 ### Function Registration
 ```bash
 curl -X POST http://localhost/registry/register -d '{
-    "uuid":"user-uuid",
     "name":"HumanFriendlyName",
     "description":"ServiceDescription",
     "payload":"docker-image-reference",
@@ -102,7 +97,6 @@ curl -X POST http://localhost/registry/register -d '{
 ### Function Execution
 ```bash
 curl -X POST http://localhost/publisher/publish -d '{
-    "uuid":"user-uuid",
     "name":"HumanFriendlyName",
     "argument":"string-argument"
     }' -H "Authorization Bearer <token>"

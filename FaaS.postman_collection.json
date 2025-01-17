@@ -1,0 +1,317 @@
+{
+	"info": {
+		"_postman_id": "e6a419a7-2214-48ac-b494-2231e5dd477b",
+		"name": "FaaS",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "33921953"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"user\",\n    \"password\": \"user\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost/auth/register",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"auth",
+								"register"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"user\",\n    \"password\": \"user\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost/auth/login",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"auth",
+								"login"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "martin",
+									"disabled": true
+								},
+								{
+									"key": "password",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Validate",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzczMzEwOTQsImlhdCI6MTczNzA3MTg5NCwiaWQiOiI5YTIwZDE4My1hMTI4LTRiYjgtYWQxMy1hODM3ZGU0OWY5YWIiLCJpc3MiOiJmYWFzLXNhZC1hcHAiLCJrZXkiOiJmYWFzLXNhZC1hcHAta2V5IiwidXNlcm5hbWUiOiJtYXJ0aW4ifQ.P09H9Brq5caNUkKYoILmRqKUX7d5gJklCSq28dCoxlg",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost/auth/validate",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"auth",
+								"validate"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Registry",
+			"item": [
+				{
+					"name": "Register a new function",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3Mzc0MDU1MzksImlhdCI6MTczNzE0NjMzOSwiaWQiOiJjZDQyNTYzNy05OGJhLTQyYTItOWY4Zi1kMDdiMThjNTgzMDAiLCJpc3MiOiJmYWFzLWFwcCIsImtleSI6ImZhYXMtYXBwLWtleSIsInVzZXJuYW1lIjoidXNlciJ9.uYdkr4ywRxEwrNMqG7qtDxEHd88oM5JewvFkDeA21_8",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"MyFunctionPython5\", \n    \"description\": \"Test function\", \n    \"payload\": \"simple-python-function:latest\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost/registry/register",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"registry",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List fuctions",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzczNzAwMjQsImlhdCI6MTczNzExMDgyNCwiaWQiOiJjZDQyNTYzNy05OGJhLTQyYTItOWY4Zi1kMDdiMThjNTgzMDAiLCJpc3MiOiJmYWFzLWFwcCIsImtleSI6ImZhYXMtYXBwLWtleSIsInVzZXJuYW1lIjoidXNlciJ9.dZ2giZRafd5-fkbGttZ7bYkl5ARC2f3P250gRtLgors",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost/registry/list",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"registry",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzczNzAwMjQsImlhdCI6MTczNzExMDgyNCwiaWQiOiJjZDQyNTYzNy05OGJhLTQyYTItOWY4Zi1kMDdiMThjNTgzMDAiLCJpc3MiOiJmYWFzLWFwcCIsImtleSI6ImZhYXMtYXBwLWtleSIsInVzZXJuYW1lIjoidXNlciJ9.dZ2giZRafd5-fkbGttZ7bYkl5ARC2f3P250gRtLgors",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"MyFunctionPython3\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost/registry/retrieve",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"registry",
+								"retrieve"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete function",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzczNzAwMjQsImlhdCI6MTczNzExMDgyNCwiaWQiOiJjZDQyNTYzNy05OGJhLTQyYTItOWY4Zi1kMDdiMThjNTgzMDAiLCJpc3MiOiJmYWFzLWFwcCIsImtleSI6ImZhYXMtYXBwLWtleSIsInVzZXJuYW1lIjoidXNlciJ9.dZ2giZRafd5-fkbGttZ7bYkl5ARC2f3P250gRtLgors",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"MyFunctionPython3\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost/registry/delete",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"registry",
+								"delete"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Publisher",
+			"item": [
+				{
+					"name": "Publish function",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3Mzc0MDU1MzksImlhdCI6MTczNzE0NjMzOSwiaWQiOiJjZDQyNTYzNy05OGJhLTQyYTItOWY4Zi1kMDdiMThjNTgzMDAiLCJpc3MiOiJmYWFzLWFwcCIsImtleSI6ImZhYXMtYXBwLWtleSIsInVzZXJuYW1lIjoidXNlciJ9.uYdkr4ywRxEwrNMqG7qtDxEHd88oM5JewvFkDeA21_8",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"MyFunctionPython4\",\n    \"argument\": \"hello world\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost/publisher/publish",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"publisher",
+								"publish"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
