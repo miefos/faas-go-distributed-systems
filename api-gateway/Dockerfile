@@ -5,5 +5,10 @@ WORKDIR /app
 COPY setup.sh ./setup.sh
 COPY secret.txt ./secret.txt
 
-# Run the setup script at startup
-CMD ["sh", "setup.sh"]
+USER root
+
+RUN apt-get update
+RUN apt-get install -y curl
+
+# Run the setup script
+CMD [ "./setup.sh" ]

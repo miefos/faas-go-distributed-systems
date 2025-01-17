@@ -6,6 +6,7 @@
 ### Preparation
 First build the docker images:
 ```bash
+docker build -t api-gateway:latest ./api-gateway
 docker build -t auth-service:latest ./auth-service
 docker build -t registry-service:latest ./registry-service
 docker build -t spawner-service:latest ./spawner-service
