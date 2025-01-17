@@ -1,14 +1,16 @@
-FROM apache/apisix
+# This docker only runs the python setup script
+FROM python:3.9-alpine
 
 WORKDIR /app
+
+# Install curl
+RUN apk add --no-cache curl
+
 # Copy the setup script and secret file into the container
-COPY setup.sh ./setup.sh
-COPY secret.txt ./secret.txt
+COPY setup.py ./setup.py
 
-USER root
-
-RUN apt-get update
-RUN apt-get install -y curl
+# Install required Python packages
+RUN pip install requests
 
 # Run the setup script
-CMD [ "./setup.sh" ]
+CMD ["python", "setup.py"]

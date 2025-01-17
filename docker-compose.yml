@@ -168,7 +168,7 @@ services:
       - faas-app-network
 
   apisix:
-    image: api-gateway:latest
+    image: apache/apisix:latest
     depends_on:
       - etcd
     ports:
@@ -178,11 +178,20 @@ services:
       - "9180:9180"  # Admin API port
     volumes:
       - ./api-gateway/apisix/conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+      - ./secret.txt:/usr/local/apisix/secret.txt:ro
     environment:
       APISIX_ADMIN_KEY: "edd1c9f034335f136f87ad84b625c8f1"
     networks:
       - faas-app-network
 
+  apisix-configurator:
+    image: apisix-configurator:latest
+    depends_on:
+      - apisix
+    volumes:
+      - ./secret.txt:/app/secret.txt:ro
+    networks:
+      - faas-app-network
 
   dashboard:
     image: apache/apisix-dashboard
