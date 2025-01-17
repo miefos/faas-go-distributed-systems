@@ -1,2 +1,5 @@
 nats1-data
 nats2-data
+
+# All files named secret.txt
+secret.txt
