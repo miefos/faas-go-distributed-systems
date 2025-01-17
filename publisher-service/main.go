@@ -7,6 +7,7 @@ import (
 	"os"
 	"publisher-service/config"
 	"publisher-service/handlers"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/nats-io/nats.go"
@@ -15,7 +16,7 @@ import (
 func main() {
 	log.Println("Starting publisher-service...")
 
-	// Carica la configurazione
+	// Load configuration
 	cfg := config.LoadConfig()
 
 	// Connetti a NATS
@@ -32,11 +33,15 @@ func main() {
 	defer nc.Close()
 	log.Println("Connected to NATS successfully.")
 
-	// Inizializza il router
+	// Inizialize router
 	r := mux.NewRouter()
 
-	// Configura l'handler
-	publisherHandler := handlers.NewPublisherHandler(nc, "functions.execute", 30)
+	replyTimeout, err := strconv.Atoi(cfg.Timeout)
+	if err != nil {
+		log.Fatalf("error converting reply timeout %v", err)
+	}
+	// Configure handler
+	publisherHandler := handlers.NewPublisherHandler(nc, cfg.MessageQueue, replyTimeout)
 	r.HandleFunc("/publisher/publish", publisherHandler.PublishHandlerMethod).Methods("POST")
 
 	r.HandleFunc("/publisher/health", func(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +50,7 @@ func main() {
 		fmt.Fprintln(w, "OK")
 	}).Methods("GET")
 
-	// Avvia il server HTTP
+	// Run http server
 	log.Printf("Publisher-service is running on port %s", cfg.SERVER_ADDRESS)
 	if err := http.ListenAndServe(cfg.SERVER_ADDRESS, r); err != nil {
 		log.Fatalf("Error starting server: %v", err)

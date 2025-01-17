@@ -73,6 +73,8 @@ services:
       - NATS1_URL=nats://nats1:4222
       - NATS2_URL=nats://nats2:4222
       - SERVER_ADDRESS=:8083
+      - TIMEOUT=:30
+      - MESSAGE_QUEUE=functions.execute
     deploy:
       replicas: 3
       resources:

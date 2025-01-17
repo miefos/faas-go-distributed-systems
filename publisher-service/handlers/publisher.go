@@ -13,10 +13,6 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-//<Da fuori riceve ID dell'utente
-// fa il retrive con quel ID della funzione
-// ottiene function ID della funzione
-
 type PublisherHandler struct {
 	NATSConn     *nats.Conn
 	RequestTopic string
@@ -37,13 +33,12 @@ func (h *PublisherHandler) PublishHandlerMethod(w http.ResponseWriter, r *http.R
 	// Request body coming from the outside
 	var incomingRequest models.FunctionMetadata
 
-	// Decodifica il corpo della richiesta in un oggetto FunctionMetadata
 	if err := json.NewDecoder(r.Body).Decode(&incomingRequest); err != nil {
-		http.Error(w, "Errore nella deserializzazione della richiesta: "+err.Error(), http.StatusBadRequest)
+		http.Error(w, "Error Deserealization incomingRequest: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Stampa informazioni di debug
+	// Print debug informations
 	log.Printf("UUID utente: %s", incomingRequest.UUID)
 	log.Printf("Name: %s", incomingRequest.Name)
 	log.Printf("Arguments: %s", incomingRequest.Argument)
@@ -70,14 +65,14 @@ func (h *PublisherHandler) PublishHandlerMethod(w http.ResponseWriter, r *http.R
 	// Build payload to send to spawner as a json
 	payload := []byte(fmt.Sprintf(`{"image_reference": "%s", "parameter": "%s"}`, imageReference, functionArgument))
 
-	// Pubblica sulla coda NATS e ottieni la risposta
+	// Public response on NAT Worker Queue
 	msg, err := h.NATSConn.Request(h.RequestTopic, payload, time.Duration(h.ReplyTimeout)*time.Second)
 	if err != nil {
 		http.Error(w, "Error submission worker "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Rispondi al client con i dati del worker
+	//return worker data
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(msg.Data)
