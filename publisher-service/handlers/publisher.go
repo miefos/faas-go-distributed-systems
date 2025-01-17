@@ -38,10 +38,12 @@ func (h *PublisherHandler) PublishHandlerMethod(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// Print debug informations
-	log.Printf("UUID utente: %s", incomingRequest.UUID)
-	log.Printf("Name: %s", incomingRequest.Name)
-	log.Printf("Arguments: %s", incomingRequest.Argument)
+	/*
+		// Print debug informations
+		log.Printf("UUID utente: %s", incomingRequest.UUID)
+		log.Printf("Name: %s", incomingRequest.Name)
+		log.Printf("Arguments: %s", incomingRequest.Argument)
+	*/
 
 	functionArgument := incomingRequest.Argument
 

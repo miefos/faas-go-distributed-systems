@@ -1,7 +1,9 @@
 package config
 
 import (
+	"log"
 	"os"
+	"strconv"
 )
 
 type Config struct {
@@ -9,7 +11,7 @@ type Config struct {
 	NATS2_URL      string
 	SERVER_ADDRESS string
 	MessageQueue   string
-	Timeout        string //seconds
+	Timeout        int //seconds
 }
 
 func LoadConfig() *Config {
@@ -17,7 +19,10 @@ func LoadConfig() *Config {
 	nats2_url := getEnv("NATS2_URL", "nats://localhost:4223")
 	server_address := getEnv("SERVER_ADDRESS", ":8083")
 	messageQueue := getEnv("MESSAGE_QUEUE", "functions.execute")
-	timeout := getEnv("TIMEOUT", "30")
+	timeout, err := strconv.Atoi(getEnv("TIMEOUT", "30"))
+	if err != nil {
+		log.Fatalf("Error parsing TIMEOUT: %v", err)
+	}
 	return &Config{
 		NATS1_URL:      nats1_url,
 		NATS2_URL:      nats2_url,

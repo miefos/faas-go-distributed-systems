@@ -7,7 +7,6 @@ import (
 	"os"
 	"publisher-service/config"
 	"publisher-service/handlers"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/nats-io/nats.go"
@@ -36,12 +35,8 @@ func main() {
 	// Inizialize router
 	r := mux.NewRouter()
 
-	replyTimeout, err := strconv.Atoi(cfg.Timeout)
-	if err != nil {
-		log.Fatalf("error converting reply timeout %v", err)
-	}
 	// Configure handler
-	publisherHandler := handlers.NewPublisherHandler(nc, cfg.MessageQueue, replyTimeout)
+	publisherHandler := handlers.NewPublisherHandler(nc, cfg.MessageQueue, cfg.Timeout)
 	r.HandleFunc("/publisher/publish", publisherHandler.PublishHandlerMethod).Methods("POST")
 
 	r.HandleFunc("/publisher/health", func(w http.ResponseWriter, r *http.Request) {
