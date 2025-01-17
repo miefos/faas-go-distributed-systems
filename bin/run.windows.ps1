@@ -10,7 +10,9 @@ if (-not (Test-Path -Path "secret.txt")) {
     Write-Host "$CYAN[1] Generating Secret$RESET"
 
     # Generate a random secret and save it to secret.txt
-    $secret = [Convert]::ToBase64String((New-Object Security.Cryptography.RNGCryptoServiceProvider).GetBytes(32))
+    $secretBytes = New-Object byte[] 32
+    (New-Object Security.Cryptography.RNGCryptoServiceProvider).GetBytes($secretBytes)
+    $secret = [Convert]::ToBase64String($secretBytes)
     Set-Content -Path "secret.txt" -Value $secret
     Set-Content -Path ".\auth-service\secret.txt" -Value $secret
     Set-Content -Path ".\api-gateway\secret.txt" -Value $secret
