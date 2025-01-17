@@ -49,7 +49,7 @@ echo
 
 ### 4. Docker compose up
 echo -e "${CYAN}[4] Starting services${RESET}"
-docker compose up -d --scale auth-service=2 --scale registry-service=2 --scale spawner-service=2 --scale publisher-service=2
+docker compose up -d
 echo -e "${GREEN}[4] Done: Services started${RESET}"
 echo
 
