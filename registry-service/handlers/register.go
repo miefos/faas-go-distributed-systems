@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
 	"registry-service/models"
 	"registry-service/storage"
+	"registry-service/utils"
 
 	"github.com/gorilla/mux"
 )
@@ -39,8 +39,24 @@ func (h *Handler) RegisterFunction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get UUID from body
+	userID, err := utils.GetUserIDFromToken(r)
+	if err != nil {
+		log.Printf("Error extracting user ID: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	log.Printf("ID from JWT: %s", userID)
+
+	// Set userID as UUID if UUID is empty
 	if metadata.UUID == "" {
+		log.Printf("UUID is empty, setting UUID to userID: %s", userID)
+		metadata.UUID = userID
+	}
+
+	// Optional: Additional validation if UUID should always match userID
+	if metadata.UUID != userID {
+		log.Printf("UUID does not match userID. UUID: %s, userID: %s", metadata.UUID, userID)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}

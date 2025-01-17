@@ -1,19 +1,20 @@
-# Use an official Go image as the build stage
+# Use the official Go 1.23 image as the base image
 FROM golang:1.23
 
-# Set the current working directory inside the container
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the Go modules file and download the dependencies
-COPY . ./
+# Copy the go.mod and go.sum files to the container
+COPY go.mod go.sum ./
 
-RUN go mod init registry-service
+# Download the dependencies defined in go.mod
+RUN go mod tidy
 
-# Download the Go dependencies
-RUN go get github.com/gorilla/mux && go get github.com/nats-io/nats.go
+# Copy the entire source code into the container
+COPY . .
 
-# Compile the Go application when the container is built
-RUN go build -o registry-service main.go
+# Build the Go application
+RUN go build -o main .
 
-# Set the entry point for the container
-CMD ["./registry-service"]
+# Define the command to run the application
+CMD ["./main"]

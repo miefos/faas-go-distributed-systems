@@ -2,29 +2,30 @@ package handlers
 
 import (
 	"encoding/json"
-	"net/http"
 	"log"
-	"registry-service/models"
+	"net/http"
+	"registry-service/utils"
 )
 
 func (h *Handler) ListFunctions(w http.ResponseWriter, r *http.Request) {
-	var metadata models.FunctionMetadata
-	if err := json.NewDecoder(r.Body).Decode(&metadata); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	if metadata.UUID == "" {
+	// Extract userID (or UUID) from the token
+	userID, err := utils.GetUserIDFromToken(r)
+	if err != nil {
+		log.Printf("Error extracting user ID: %v", err)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	metadataList, err := h.KVStore.ListFunctions(metadata.UUID)
+	// Retrieve the list of functions for the user
+	metadataList, err := h.KVStore.ListFunctions(userID)
 	if err != nil {
+		log.Printf("Failed to retrieve functions for user %s: %v", userID, err)
 		http.Error(w, "Failed to retrieve functions", http.StatusInternalServerError)
 		return
 	}
 
-	log.Printf("Functions listed for user %s", metadata.UUID)
+	// Log and respond with the list of functions
+	log.Printf("Functions listed for user %s", userID)
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(metadataList)
 }

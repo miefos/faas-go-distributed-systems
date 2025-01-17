@@ -48,7 +48,7 @@ func (h *PublisherHandler) PublishHandlerMethod(w http.ResponseWriter, r *http.R
 	functionArgument := incomingRequest.Argument
 
 	// Obtain all information from registry
-	retrievedCompleteImage, err := getFunction(&incomingRequest)
+	retrievedCompleteImage, err := getFunction(&incomingRequest, r)
 	if err != nil {
 		http.Error(w, "Error retrieve function: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -80,10 +80,9 @@ func (h *PublisherHandler) PublishHandlerMethod(w http.ResponseWriter, r *http.R
 	w.Write(msg.Data)
 }
 
-func getFunction(function *models.FunctionMetadata) ([]byte, error) {
+func getFunction(function *models.FunctionMetadata, r *http.Request) ([]byte, error) {
 	// Prepare JSON body for querying the registry
 	queryBody, err := json.Marshal(map[string]string{
-		"uuid": function.UUID,
 		"name": function.Name,
 	})
 	if err != nil {
@@ -93,11 +92,21 @@ func getFunction(function *models.FunctionMetadata) ([]byte, error) {
 	// Create URL
 	baseURL := "http://registry-service:8082/registry/retrieve"
 
+	auth := r.Header.Get("Authorization")
+
+	if auth == "" {
+		return nil, fmt.Errorf("error Authorization header not found")
+	}
+
 	// Create a new request with JSON body
 	req, err := http.NewRequest("GET", baseURL, bytes.NewBuffer(queryBody))
 	if err != nil {
 		return nil, fmt.Errorf("error creating new request: %w", err)
 	}
+
+	log.Printf("Authorization header that was sent to registry: %s", auth)
+
+	req.Header.Set("Authorization", auth)
 	req.Header.Set("Content-Type", "application/json")
 
 	// Send the request
