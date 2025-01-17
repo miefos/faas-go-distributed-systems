@@ -85,6 +85,40 @@ curl -X POST http://localhost/auth/login -d '{"username":"user","password":"pass
 ```
 This will return an authorization token that can be used to authenticate the user in the other services.
 
+### Function Image Creation
+You can either create a new image locally or use an existing image from Docker Hub.
+#### Create Dockerfile for the function
+```Dockerfile
+FROM python:3.9-slim
+WORKDIR /usr/src/app
+COPY simple_function.py .
+RUN chmod +x simple_function.py
+ENTRYPOINT ["python", "simple_function.py"]
+```
+
+#### Create the function file
+```python
+import sys
+
+def simple_function(input_string):
+    return input_string.upper()
+
+if __name__ == "__main__":
+    input_string = sys.argv[1]
+    result = simple_function(input_string)
+    print(result)
+```
+
+#### Build the image
+```bash
+docker build -t simple_function:latest .
+```
+
+#### Push the image to Docker Hub (optional)
+```bash
+docker tag simple_function:latest <docker-hub-username>/simple_function:latest
+```
+
 ### Function Registration
 ```bash
 curl -X POST http://localhost/registry/register -d '{
