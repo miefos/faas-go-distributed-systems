@@ -5,6 +5,9 @@ ADMIN_API_KEY = "edd1c9f034335f136f87ad84b625c8f1"
 JWT_SECRET_KEY = open("secret.txt").read().strip()
 JWT_KEY = "faas-app-key"
 
+print(f"JWT_SECRET_KEY: {JWT_SECRET_KEY}")
+print(f"ADMIN_API_KEY: {ADMIN_API_KEY}")
+
 # Wait until apisix container is healthy
 while True:
     try:

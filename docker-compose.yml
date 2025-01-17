@@ -13,7 +13,7 @@ services:
     volumes:
       - ./secret.txt:/app/secret.txt
     deploy:
-      replicas: 1
+      replicas: 3
       resources:
         limits:
           cpus: '0.5'
@@ -44,7 +44,7 @@ services:
       - SERVER_ADDRESS=:8082
       - BUCKET_NAME=functions
     deploy:
-      replicas: 1
+      replicas: 3
       resources:
         limits:
           cpus: '0.5'
@@ -74,7 +74,7 @@ services:
       - NATS2_URL=nats://nats2:4222
       - SERVER_ADDRESS=:8083
     deploy:
-      replicas: 1
+      replicas: 3
       resources:
         limits:
           cpus: '0.5'
@@ -103,9 +103,9 @@ services:
       - NATS1_URL=nats://nats1:4222
       - NATS2_URL=nats://nats2:4222
       - MESSAGE_QUEUE=functions.execute
-      - MAX_CONTAINERS=10
+      - MAX_CONTAINERS=100
     deploy:
-      replicas: 1
+      replicas: 10
       resources:
         limits:
           cpus: '0.5'
