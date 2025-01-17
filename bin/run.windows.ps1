@@ -53,30 +53,3 @@ Write-Host "$CYAN[4] Starting services$RESET"
 docker compose up -d
 Write-Host "$GREEN[4] Done: Services started$RESET"
 Write-Host ""
-
-### 5. Setup API gateway
-Write-Host "$CYAN[5] Setting up API Gateway$RESET"
-
-# Get container IDs that match the "apisix" filter
-$container_ids = docker ps --filter "name=apisix" --format "{{.ID}}"
-
-if (-not $container_ids) {
-    Write-Host "$RED[ERROR] No containers matching 'apisix' found.$RESET"
-    exit 1
-}
-
-# Loop over each container and run setup.sh
-foreach ($container_id in $container_ids) {
-    Write-Host "$CYAN  Setting up API Gateway in container $container_id$RESET"
-    docker exec --user root $container_id powershell -Command "./setup.ps1"
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "$RED[ERROR] Failed to run setup.ps1 in container $container_id.$RESET"
-        exit 1
-    }
-    Write-Host "$GREEN  Done: API Gateway setup in container $container_id$RESET"
-}
-Write-Host "$GREEN[5] Done: API Gateway setup$RESET"
-Write-Host ""
-
-# 6. Finish
-Write-Host "$GREEN Setup complete.$RESET"

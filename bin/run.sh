@@ -53,29 +53,3 @@ echo -e "${CYAN}[4] Starting services${RESET}"
 docker compose up -d
 echo -e "${GREEN}[4] Done: Services started${RESET}"
 echo
-
-### 5. Setup API gateway
-echo -e "${CYAN}[5] Setting up API Gateway${RESET}"
-### Get container IDs that match the "apisix" filter
-container_ids=$(docker ps -q --filter "name=apisix")
-
-if [ -z "$container_ids" ]; then
-  echo -e "${RED}[ERROR] No containers matching 'apisix' found.${RESET}"
-  exit 1
-fi
-
-# Loop over each container and run setup.sh
-for container_id in $container_ids; do
-  echo -e "${CYAN}  Setting up API Gateway in container $container_id${RESET}"
-  docker exec --user root "$container_id" /bin/sh -c "./setup.sh"
-  if [ $? -ne 0 ]; then
-    echo -e "${RED}[ERROR] Failed to run setup.sh in container $container_id.${RESET}"
-    exit 1
-  fi
-  echo -e "${GREEN}  Done: API Gateway setup in container $container_id${RESET}"
-done
-echo -e "${GREEN}[5] Done: API Gateway setup${RESET}"
-echo
-
-# 6. Finish
-echo -e "${GREEN}Setup complete.${RESET}"
