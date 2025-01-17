@@ -6,7 +6,7 @@ Admin API at http://localhost:9180
 
 Setup API Gateway routes. You might need to change container name in the script.
 ```
-docker exec -it --user root sad-apisix-1 /bin/sh -c "./setup.sh"
+docker exec -it --user root $(docker ps -q --filter "name=apisix") bash -c "./setup.sh"
 ```
 
 Validate/List existing routes (run from within the container):

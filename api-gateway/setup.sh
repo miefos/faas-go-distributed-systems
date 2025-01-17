@@ -44,8 +44,11 @@ ADMIN_API_KEY="edd1c9f034335f136f87ad84b625c8f1"
 JWT_SECRET_KEY=$(<secret.txt)
 JWT_KEY="faas-app-key"
 
-# Wait a bit until docker containers start up
-sleep 7
+# Wait until apisix container is healthy
+until curl -sf http://apisix:9180/apisix/admin/routes -H "X-API-KEY: $ADMIN_API_KEY" > /dev/null; do
+    echo "Waiting for apisix service to be ready..."
+    sleep 1
+done
 
 curl -X PUT http://apisix:9180/apisix/admin/consumers \
 -H "X-API-KEY: $ADMIN_API_KEY" \
