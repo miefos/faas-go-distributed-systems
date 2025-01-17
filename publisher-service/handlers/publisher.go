@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,7 +9,6 @@ import (
 	"net/http"
 	"publisher-service/models"
 	"time"
-	"bytes"
 
 	"github.com/nats-io/nats.go"
 )
@@ -70,7 +70,6 @@ func (h *PublisherHandler) PublishHandlerMethod(w http.ResponseWriter, r *http.R
 	// Build payload to send to spawner as a json
 	payload := []byte(fmt.Sprintf(`{"image_reference": "%s", "parameter": "%s"}`, imageReference, functionArgument))
 
-
 	// Pubblica sulla coda NATS e ottieni la risposta
 	msg, err := h.NATSConn.Request(h.RequestTopic, payload, time.Duration(h.ReplyTimeout)*time.Second)
 	if err != nil {
@@ -95,7 +94,7 @@ func getFunction(function *models.FunctionMetadata) ([]byte, error) {
 	}
 
 	// Create URL
-	baseURL := "http://registry-service:8082/retrieve"
+	baseURL := "http://registry-service:8082/registry/retrieve"
 
 	// Create a new request with JSON body
 	req, err := http.NewRequest("GET", baseURL, bytes.NewBuffer(queryBody))

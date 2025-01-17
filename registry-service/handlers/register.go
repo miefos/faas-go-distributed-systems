@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -23,6 +24,12 @@ func RegisterRoutes(router *mux.Router, kvStore *storage.KVStore) {
 	router.HandleFunc("/registry/list", h.ListFunctions).Methods("GET")
 	router.HandleFunc("/registry/delete", h.DeleteFunction).Methods("DELETE")
 	// router.HandleFunc("/update", h.UpdateFunction).Methods("PUT")
+
+	router.HandleFunc("/registry/health", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Health check")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "OK")
+	}).Methods("GET")
 }
 
 func (h *Handler) RegisterFunction(w http.ResponseWriter, r *http.Request) {

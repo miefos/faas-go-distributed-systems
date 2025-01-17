@@ -40,12 +40,24 @@ else
   exit 1
 fi
 
-
-
 ADMIN_API_KEY="edd1c9f034335f136f87ad84b625c8f1"
+JWT_SECRET_KEY=$(<secret.txt)
+JWT_KEY="faas-app-key"
 
-# Wait 5 seconds until docker containers start up
-sleep 5
+# Wait a bit until docker containers start up
+sleep 7
+
+curl -X PUT http://apisix:9180/apisix/admin/consumers \
+-H "X-API-KEY: $ADMIN_API_KEY" \
+-d '{
+    "username": "jwt_consumer",
+    "plugins": {
+        "jwt-auth": {
+            "key": "'$JWT_KEY'",
+            "secret": "'$JWT_SECRET_KEY'"
+        }
+    }
+}'
 
 # Define a route for auth-service
 curl -X PUT http://apisix:9180/apisix/admin/routes/1 \
@@ -72,6 +84,9 @@ curl -X PUT http://apisix:9180/apisix/admin/routes/2 \
           "nodes": {
             "registry-service:8082": 1
           }
+        },
+        "plugins": {
+          "jwt-auth": {}
         }
       }'
 
@@ -84,8 +99,11 @@ curl -X PUT http://apisix:9180/apisix/admin/routes/3 \
         "upstream": {
           "type": "roundrobin",
           "nodes": {
-            "registry-service:8083": 1
+            "publisher-service:8083": 1
           }
+        },
+        "plugins": {
+          "jwt-auth": {}
         }
       }'
 

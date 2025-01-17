@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   auth-service:
     image: auth-service:latest
@@ -11,6 +10,8 @@ services:
       - NATS1_URL=nats://nats1:4222
       - NATS2_URL=nats://nats2:4222
       - SERVER_ADDRESS=:8081
+    volumes:
+      - ./secret.txt:/app/secret.txt
     deploy:
       replicas: 1
       resources:
@@ -25,7 +26,7 @@ services:
     networks:
       - faas-app-network
     healthcheck: # Health check for the service
-      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8081/auth/health"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -56,7 +57,7 @@ services:
     networks:
       - faas-app-network
     healthcheck: # Health check for the service
-      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8082/registry/health"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -65,8 +66,6 @@ services:
     image: publisher-service:latest
     expose:
       - "8083"  # Only expose internally for NGINX to access
-    ports:
-      - "8083:8083"  # External port mapped to publisher-service
     depends_on:
       - nats1
       - nats2
@@ -87,6 +86,11 @@ services:
         condition: on-failure
     networks:
       - faas-app-network
+    healthcheck: # Health check for the service
+      test: ["CMD", "curl", "-f", "http://localhost:8083/publisher/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   spawner-service:
     image: spawner-service:latest
@@ -190,6 +194,7 @@ services:
     volumes:
       - ./api-gateway/apisix/conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
       - ./api-gateway/setup.sh:/usr/local/apisix/setup.sh:ro
+      - ./secret.txt:/usr/local/apisix/secret.txt:ro
     environment:
       APISIX_ADMIN_KEY: "edd1c9f034335f136f87ad84b625c8f1"
     networks:

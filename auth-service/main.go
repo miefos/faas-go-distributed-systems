@@ -28,14 +28,14 @@ func main() {
 		nats1URL = "nats://localhost:4222"
 	}
 
-	if(utils.InitNATSConnection(nats1URL) != 0){
-		if(utils.InitNATSConnection(nats2URL) != 0){
+	if utils.InitNATSConnection(nats1URL) != 0 {
+		if utils.InitNATSConnection(nats2URL) != 0 {
 			log.Fatalf("Error connecting to all NATS servers")
 			os.Exit(-1)
 		}
 	}
 
-	if(utils.InitKVStore("users") != 0){
+	if utils.InitKVStore("users") != 0 {
 		log.Fatalf("Error initializing KV store")
 		os.Exit(-1)
 	}
@@ -47,6 +47,13 @@ func main() {
 	r.HandleFunc("/auth/register", handlers.RegisterHandler).Methods("POST")
 	r.HandleFunc("/auth/login", handlers.LoginHandler).Methods("POST")
 	r.HandleFunc("/auth/validate", handlers.ValidateHandler).Methods("GET")
+
+	r.HandleFunc("/auth/health", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Health check")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "OK")
+	}).Methods("GET")
+
 	r.NotFoundHandler = http.HandlerFunc(NotFoundHandler)
 
 	// Start server

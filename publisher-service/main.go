@@ -1,11 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"publisher-service/config"
 	"publisher-service/handlers"
-	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/nats-io/nats.go"
@@ -36,7 +37,13 @@ func main() {
 
 	// Configura l'handler
 	publisherHandler := handlers.NewPublisherHandler(nc, "functions.execute", 30)
-	r.HandleFunc("/publish", publisherHandler.PublishHandlerMethod).Methods("POST")
+	r.HandleFunc("/publisher/publish", publisherHandler.PublishHandlerMethod).Methods("POST")
+
+	r.HandleFunc("/publisher/health", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Health check")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "OK")
+	}).Methods("GET")
 
 	// Avvia il server HTTP
 	log.Printf("Publisher-service is running on port %s", cfg.SERVER_ADDRESS)

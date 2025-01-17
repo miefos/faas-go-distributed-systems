@@ -9,11 +9,7 @@ First build the docker images:
 docker build -t auth-service:latest ./auth-service
 docker build -t registry-service:latest ./registry-service
 docker build -t spawner-service:latest ./spawner-service
-```
-
-Might need to init swarm:
-```
-docker swarm init
+docker build -t publisher-service:latest ./publisher-service
 ```
 
 ### Docker compose deployment
@@ -23,7 +19,7 @@ docker compose up
 ```
 To scale services, simply add the `--scale` flag to the command:
 ```bash
-docker compose up --scale auth-service=<number> --scale registry-service=<number> --scale execution-service=<number>
+docker compose up --scale auth-service=<number> --scale registry-service=<number> --scale spawner-service=<number> --scale publisher-service=<number>
 ```
 
 ### API Gateway setup
@@ -55,7 +51,7 @@ The entrypoint to all the services, this is the only service that is exposed to 
 
 - [x] Implement rerouting to Auth service
 - [x] Implement rerouting to Registry service
-- [ ] Implement JWT validation
+- [x] Implement JWT validation
 
 ### Auth service
 User auth & registration
